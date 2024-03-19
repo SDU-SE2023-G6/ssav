@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name x="5" y="5">Template</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-255" y="357">
+			<name x="-246" y="323">c:ReqSyncSpeed</name>
+		</location>
+		<location id="id1" x="-255" y="212">
+			<name x="-246" y="178">CheckGearNeu</name>
+		</location>
+		<location id="id2" x="-255" y="85">
+			<name x="-246" y="59">c:ReqNeuGear</name>
+		</location>
+		<location id="id3" x="-255" y="-51">
+			<name x="-246" y="-85">CheckTorque</name>
+		</location>
+		<location id="id4" x="-255" y="-331">
+			<name x="-246" y="-357">Gear</name>
+		</location>
+		<location id="id5" x="-255" y="-187">
+			<name x="-238" y="-212">c:Initiate</name>
+		</location>
+		<location id="id6" x="102" y="212">
+			<name x="68" y="178">GNeuError</name>
+		</location>
+		<location id="id7" x="340" y="212">
+			<name x="348" y="178">CheckGearNeu2</name>
+		</location>
+		<location id="id8" x="340" y="17">
+			<name x="348" y="-9">c:ClutchOpen2</name>
+		</location>
+		<location id="id9" x="34" y="-51">
+			<name x="24" y="-85">CheckClutch2</name>
+		</location>
+		<location id="id10" x="34" y="93">
+			<name x="42" y="59">COpenError</name>
+		</location>
+		<location id="id11" x="34" y="357">
+		</location>
+		<location id="id12" x="340" y="323">
+			<name x="348" y="289">c:ReqSetGear2</name>
+		</location>
+		<init ref="id4"/>
+		<transition id="id13">
+			<source ref="id7"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="348" y="246">GearNeu?</label>
+		</transition>
+		<transition id="id14">
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="guard" x="42" y="272">GCTimer&gt;150
+GCTimer&lt;=200</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id1"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-110" y="170">GCTimer&gt;200
+GCTimer&lt;=250</label>
+		</transition>
+		<transition id="id16">
+			<source ref="id5"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-399" y="-144">FromGear&lt;=0</label>
+			<nail x="-357" y="-51"/>
+			<nail x="-357" y="187"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id3"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-127" y="-76">GCTimer&gt;=250</label>
+			<label kind="synchronisation" x="-127" y="-110">OpenClutch!</label>
+			<label kind="assignment" x="-127" y="-93">GCTimer:=0</label>
+		</transition>
+		<transition id="id18">
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="guard" x="42" y="-17">GCTimer&gt;150
+GCTimer&lt;=200</label>
+		</transition>
+		<transition id="id19">
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="195" y="-76">ClutchIsOpen?</label>
+			<nail x="340" y="-51"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="348" y="93">ReqNeu!</label>
+			<label kind="assignment" x="348" y="110">GCTimer:=0</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="guard" x="187" y="170">GCTimer&gt;200
+GCTimer&lt;=250</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-246" y="-297">ReqNewGear?</label>
+			<label kind="assignment" x="-246" y="-280">SysTimer:=0</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-246" y="246">GearNeu?</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-246" y="102">ReqNeu!</label>
+			<label kind="assignment" x="-246" y="119">GCTimer:=0</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-246" y="-17">GCTimer&lt;250</label>
+			<label kind="synchronisation" x="-246" y="0">TorqueZero?</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id5"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-246" y="-170">FromGear&gt;0</label>
+			<label kind="synchronisation" x="-246" y="-136">ReqZeroTorque!</label>
+			<label kind="assignment" x="-246" y="-153">GCTimer:=0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
