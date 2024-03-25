@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name x="5" y="5">InterfaceAutomation</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-144" y="-76">
+			<name x="-170" y="-110">GearN</name>
+		</location>
+		<location id="id1" x="-153" y="204">
+			<name x="-170" y="221">GearR</name>
+		</location>
+		<location id="id2" x="-51" y="68">
+			<name x="-34" y="59">chkGearNR</name>
+		</location>
+		<location id="id3" x="-246" y="68">
+			<name x="-340" y="59">chkGearRN</name>
+		</location>
+		<location id="id4" x="229" y="0">
+			<name x="195" y="17">chkGear1N</name>
+		</location>
+		<location id="id5" x="229" y="-153">
+			<name x="195" y="-187">chkGearN1</name>
+		</location>
+		<location id="id6" x="552" y="-85">
+			<name x="542" y="-119">Gear1</name>
+		</location>
+		<location id="id7" x="544" y="178">
+			<name x="527" y="195">Gear2</name>
+		</location>
+		<location id="id8" x="535" y="399">
+			<name x="510" y="416">Gear3</name>
+		</location>
+		<location id="id9" x="535" y="620">
+			<name x="509" y="645">Gear4</name>
+		</location>
+		<location id="id10" x="527" y="850">
+			<name x="510" y="859">Gear5</name>
+		</location>
+		<location id="id11" x="714" y="68">
+			<name x="731" y="59">chkGear12</name>
+		</location>
+		<location id="id12" x="374" y="68">
+			<name x="289" y="59">chkGear21</name>
+		</location>
+		<location id="id13" x="697" y="297">
+			<name x="714" y="289">chkGear23</name>
+		</location>
+		<location id="id14" x="382" y="280">
+			<name x="289" y="272">chkGear32</name>
+		</location>
+		<location id="id15" x="680" y="493">
+			<name x="697" y="484">chkGear34</name>
+		</location>
+		<location id="id16" x="391" y="493">
+			<name x="297" y="484">chkGear43</name>
+		</location>
+		<location id="id17" x="654" y="748">
+			<name x="680" y="739">chkGear45</name>
+		</location>
+		<location id="id18" x="391" y="739">
+			<name x="297" y="731">chkGear54</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id19">
+			<source ref="id18"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="409" y="658">NewGear?</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id10"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="409" y="790">ReqNewGear!</label>
+			<label kind="assignment" x="409" y="807">FromGear:=5
+ToGear:=4</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id17"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="545" y="794">NewGear?</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id9"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="545" y="663">ReqNewGear!</label>
+			<label kind="assignment" x="545" y="680">FromGear:=4
+ToGear:=5</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id16"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="409" y="429">NewGear?</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id9"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="409" y="535">ReqNewGear!</label>
+			<label kind="assignment" x="409" y="552">FromGear:=4
+ToGear:=3</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id15"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="603" y="552">NewGear?</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id8"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="553" y="429">ReqNewGear!</label>
+			<label kind="assignment" x="553" y="446">FromGear:=3
+ToGear:=4</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id14"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="400" y="212">NewGear?</label>
+		</transition>
+		<transition id="id28">
+			<source ref="id8"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="400" y="322">ReqNewGear!</label>
+			<label kind="assignment" x="400" y="339">FromGear:=3
+ToGear:=2</label>
+		</transition>
+		<transition id="id29">
+			<source ref="id13"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="612" y="348">NewGear?</label>
+		</transition>
+		<transition id="id30">
+			<source ref="id7"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="562" y="220">ReqNewGear!</label>
+			<label kind="assignment" x="562" y="237">FromGear:=2
+ToGear:=3</label>
+		</transition>
+		<transition id="id31">
+			<source ref="id12"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="392" y="-25">NewGear?</label>
+		</transition>
+		<transition id="id32">
+			<source ref="id7"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="392" y="106">ReqNewGear!</label>
+			<label kind="assignment" x="392" y="123">FromGear:=2
+ToGear:=1</label>
+		</transition>
+		<transition id="id33">
+			<source ref="id11"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="620" y="127">NewGear?</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id6"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="620" y="-76">ReqNewGear!</label>
+			<label kind="assignment" x="620" y="-59">FromGear:=1
+ToGear:=2</label>
+		</transition>
+		<transition id="id35">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-246" y="-42">NewGear?</label>
+		</transition>
+		<transition id="id36">
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-297" y="127">ReqNewGear!</label>
+			<label kind="assignment" x="-297" y="144">FromGear:=6
+ToGear:=0</label>
+		</transition>
+		<transition id="id37">
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-102" y="136">NewGear?</label>
+		</transition>
+		<transition id="id38">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-126" y="-21">ReqNewGear!</label>
+			<label kind="assignment" x="-127" y="0">FromGear:=0
+ToGear:=6</label>
+		</transition>
+		<transition id="id39">
+			<source ref="id4"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="17" y="-34">NewGear?</label>
+		</transition>
+		<transition id="id40">
+			<source ref="id6"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="272" y="-93">ReqNewGear!</label>
+			<label kind="assignment" x="272" y="-76">FromGear:=1
+ToGear:=0</label>
+		</transition>
+		<transition id="id41">
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="323" y="-153">NewGear?</label>
+		</transition>
+		<transition id="id42">
+			<source ref="id0"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-25" y="-178">ReqNewGear!</label>
+			<label kind="assignment" x="-25" y="-153">FromGear:=0
+ToGear:=1</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
