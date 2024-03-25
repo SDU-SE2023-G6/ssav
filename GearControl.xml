@@ -2,19 +2,20 @@
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
 <nta>
 	<declaration>// Place global declarations here.
-</declaration>
+clock SysTimer;</declaration>
 	<template>
-		<name x="5" y="5">Template</name>
+		<name x="5" y="5">GearControl</name>
+		<parameter>int &amp;FromGear, int &amp;ToGear, chan &amp;ReqNewGear, chan &amp;NewGear, chan &amp;ReqSet, chan &amp;ReqNeu, chan &amp;GearSet, chan &amp;GearNeu, chan &amp;OpenClutch, chan &amp;CloseClutch, chan &amp;ClutchIsOpen, chan &amp;ClutchIsClosed, chan &amp;ReqSpeed, chan &amp;ReqTorque, chan &amp;ReqZeroTorque, chan &amp;TorqueZero, chan &amp;SpeedSet</parameter>
 		<declaration>// Place local declarations here.
-</declaration>
+clock GCTimer;</declaration>
 		<location id="id0" x="-255" y="331">
-			<name x="-238" y="314">c:ReqSyncSpeed</name>
+			<name x="-238" y="314">c_ReqSyncSpeed</name>
 		</location>
 		<location id="id1" x="-255" y="212">
 			<name x="-246" y="178">CheckGearNeu</name>
 		</location>
 		<location id="id2" x="-255" y="85">
-			<name x="-246" y="59">c:ReqNeuGear</name>
+			<name x="-246" y="59">c_ReqNeuGear</name>
 		</location>
 		<location id="id3" x="-255" y="-51">
 			<name x="-246" y="-85">CheckTorque</name>
@@ -23,7 +24,7 @@
 			<name x="-246" y="-357">Gear</name>
 		</location>
 		<location id="id5" x="-255" y="-187">
-			<name x="-238" y="-212">c:Initiate</name>
+			<name x="-238" y="-212">c_Initiate</name>
 		</location>
 		<location id="id6" x="102" y="212">
 			<name x="68" y="178">GNeuError</name>
@@ -32,7 +33,7 @@
 			<name x="348" y="178">CheckGearNeu2</name>
 		</location>
 		<location id="id8" x="340" y="17">
-			<name x="348" y="-9">c:ClutchOpen2</name>
+			<name x="348" y="-9">c_ClutchOpen2</name>
 		</location>
 		<location id="id9" x="34" y="-51">
 			<name x="24" y="-85">CheckClutch2</name>
@@ -44,13 +45,13 @@
 			<name x="-76" y="408">CheckClutch</name>
 		</location>
 		<location id="id12" x="340" y="323">
-			<name x="212" y="323">c:ReqSetGear2</name>
+			<name x="212" y="323">c_ReqSetGear2</name>
 		</location>
 		<location id="id13" x="-255" y="442">
 			<name x="-246" y="425">CheckSyncSpeed</name>
 		</location>
 		<location id="id14" x="187" y="485">
-			<name x="68" y="477">c:ClutchOpen</name>
+			<name x="68" y="477">c_ClutchOpen</name>
 		</location>
 		<location id="id15" x="187" y="646">
 			<name x="59" y="629">CheckGearSet2</name>
@@ -65,19 +66,19 @@
 			<name x="-170" y="714">CheckClutchClosed</name>
 		</location>
 		<location id="id19" x="-255" y="561">
-			<name x="-229" y="552">c:ReqSetGear</name>
+			<name x="-229" y="552">c_ReqSetGear</name>
 		</location>
 		<location id="id20" x="-255" y="646">
 			<name x="-238" y="620">CheckGearSet1</name>
 		</location>
 		<location id="id21" x="-255" y="748">
-			<name x="-246" y="773">c:ReqTorqueC</name>
+			<name x="-246" y="773">c_ReqTorqueC</name>
 		</location>
 		<location id="id22" x="-255" y="909">
-			<name x="-391" y="900">c:GearChanged</name>
+			<name x="-391" y="900">c_GearChanged</name>
 		</location>
 		<location id="id23" x="187" y="748">
-			<name x="195" y="765">c:ClutchClose</name>
+			<name x="195" y="765">c_ClutchClose</name>
 		</location>
 		<location id="id24" x="-17" y="833">
 			<name x="-59" y="850">CCloseError</name>
@@ -101,14 +102,14 @@
 		<transition id="id28">
 			<source ref="id24"/>
 			<target ref="id17"/>
-			<label kind="guard" x="34" y="816">GCTimer&gt;150
+			<label kind="guard" x="34" y="816">GCTimer&gt;150 &amp;&amp;
 GCTimer&lt;=200</label>
 			<nail x="119" y="833"/>
 		</transition>
 		<transition id="id29">
 			<source ref="id18"/>
 			<target ref="id24"/>
-			<label kind="guard" x="-153" y="816">GCTimer&gt;150
+			<label kind="guard" x="-153" y="816">GCTimer&gt;150 &amp;&amp;
 GCTimer&lt;=200</label>
 			<nail x="-102" y="833"/>
 		</transition>
@@ -131,13 +132,13 @@ GCTimer&lt;=200</label>
 		<transition id="id33">
 			<source ref="id15"/>
 			<target ref="id16"/>
-			<label kind="guard" x="25" y="646">GCTimer&gt;300
+			<label kind="guard" x="25" y="646">GCTimer&gt;300 &amp;&amp;
 GCTimer&lt;=350</label>
 		</transition>
 		<transition id="id34">
 			<source ref="id20"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-178" y="654">GCTimer&gt;300
+			<label kind="guard" x="-178" y="654">GCTimer&gt;300 &amp;&amp;
 GCTimer&lt;=350</label>
 		</transition>
 		<transition id="id35">
@@ -167,27 +168,27 @@ GCTimer&lt;=350</label>
 		<transition id="id39">
 			<source ref="id19"/>
 			<target ref="id20"/>
-			<label kind="synchronisation" x="-246" y="578">RegSet!</label>
+			<label kind="synchronisation" x="-246" y="578">ReqSet!</label>
 			<label kind="assignment" x="-246" y="595">GCTimer:=0</label>
 		</transition>
 		<transition id="id40">
 			<source ref="id13"/>
 			<target ref="id19"/>
 			<label kind="guard" x="-246" y="484">GCTimer&lt;150</label>
-			<label kind="synchronisation" x="-246" y="501">SpeedTest?</label>
+			<label kind="synchronisation" x="-246" y="501">SpeedSet?</label>
 		</transition>
 		<transition id="id41">
 			<source ref="id12"/>
 			<target ref="id15"/>
 			<label kind="guard" x="263" y="416">ToGear&gt;0</label>
-			<label kind="synchronisation" x="272" y="433">RegSet!</label>
+			<label kind="synchronisation" x="272" y="433">ReqSet!</label>
 			<label kind="assignment" x="246" y="450">GCTimer:=0</label>
 			<nail x="340" y="646"/>
 		</transition>
 		<transition id="id42">
 			<source ref="id14"/>
 			<target ref="id15"/>
-			<label kind="synchronisation" x="195" y="569">RegSet!</label>
+			<label kind="synchronisation" x="195" y="569">ReqSet!</label>
 			<label kind="assignment" x="195" y="586">GCTimer:=0</label>
 		</transition>
 		<transition id="id43">
@@ -207,7 +208,7 @@ GCTimer&lt;=350</label>
 			<source ref="id0"/>
 			<target ref="id13"/>
 			<label kind="guard" x="-246" y="391">ToGear&gt;0</label>
-			<label kind="synchronisation" x="-246" y="357">RegSpeed!</label>
+			<label kind="synchronisation" x="-246" y="357">ReqSpeed!</label>
 			<label kind="assignment" x="-246" y="374">GCTimer:=0</label>
 		</transition>
 		<transition id="id46">
@@ -218,13 +219,13 @@ GCTimer&lt;=350</label>
 		<transition id="id47">
 			<source ref="id11"/>
 			<target ref="id10"/>
-			<label kind="guard" x="42" y="272">GCTimer&gt;150
+			<label kind="guard" x="42" y="272">GCTimer&gt;150 &amp;&amp;
 GCTimer&lt;=200</label>
 		</transition>
 		<transition id="id48">
 			<source ref="id1"/>
 			<target ref="id6"/>
-			<label kind="guard" x="-110" y="170">GCTimer&gt;200
+			<label kind="guard" x="-110" y="170">GCTimer&gt;200 &amp;&amp;
 GCTimer&lt;=250</label>
 		</transition>
 		<transition id="id49">
@@ -244,7 +245,7 @@ GCTimer&lt;=250</label>
 		<transition id="id51">
 			<source ref="id9"/>
 			<target ref="id10"/>
-			<label kind="guard" x="42" y="-17">GCTimer&gt;150
+			<label kind="guard" x="42" y="-17">GCTimer&gt;150 &amp;&amp;
 GCTimer&lt;=200</label>
 		</transition>
 		<transition id="id52">
@@ -262,7 +263,7 @@ GCTimer&lt;=200</label>
 		<transition id="id54">
 			<source ref="id7"/>
 			<target ref="id6"/>
-			<label kind="guard" x="187" y="170">GCTimer&gt;200
+			<label kind="guard" x="187" y="170">GCTimer&gt;200 &amp;&amp;
 GCTimer&lt;=250</label>
 		</transition>
 		<transition id="id55">
@@ -296,15 +297,13 @@ GCTimer&lt;=250</label>
 			<label kind="assignment" x="-246" y="-153">GCTimer:=0</label>
 		</transition>
 	</template>
-	<system>// Place template instantiations here.
-Process = Template();
-// List one or more processes to be composed into a system.
-system Process;
-</system>
+	<system>chan ReqNewGear, NewGear, ReqSet, ReqNeu, GearSet, GearNeu, OpenClutch, CloseClutch, ClutchIsOpen, ClutchIsClosed, ReqSpeed, ReqTorque, ReqZeroTorque, TorqueZero, SpeedSet;
+int FromGear, ToGear;
+
+GearControler = GearControl(FromGear, ToGear, ReqNewGear, NewGear, ReqSet, ReqNeu, GearSet, GearNeu, OpenClutch, CloseClutch, ClutchIsOpen, ClutchIsClosed, ReqSpeed, ReqTorque, ReqZeroTorque, TorqueZero, SpeedSet);
+
+
+system GearControler;</system>
 	<queries>
-		<query>
-			<formula/>
-			<comment/>
-		</query>
 	</queries>
 </nta>
