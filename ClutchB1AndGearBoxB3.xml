@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name>GearBoxB3</name>
+		<declaration>
+int ErrStat;
+clock GBTimer;
+chan GearSet, GearNeu, ReqSet, RegNeu;</declaration>
+		<location id="id0" x="-323" y="-51">
+			<name x="-333" y="-85">Neutral</name>
+		</location>
+		<location id="id1" x="-323" y="85">
+			<name x="-416" y="59">Closing</name>
+			<label kind="invariant" x="-333" y="102">GBTimer&lt;=300</label>
+		</location>
+		<location id="id2" x="51" y="85">
+			<name x="68" y="51">Idle</name>
+		</location>
+		<location id="id3" x="51" y="-51">
+			<name x="41" y="-85">Opening</name>
+			<label kind="invariant" x="85" y="-68">GBTimer&lt;=200</label>
+		</location>
+		<location id="id4" x="-187" y="17">
+			<name x="-246" y="-17">ErrorIdle</name>
+		</location>
+		<location id="id5" x="-85" y="17">
+			<name x="-102" y="34">ErrorNeu</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id6" controllable="false">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-229" y="59">GBTimer&gt;=100</label>
+			<label kind="synchronisation" x="-144" y="110">GearSet!</label>
+		</transition>
+		<transition id="id7">
+			<source ref="id1"/>
+			<target ref="id4"/>
+			<label kind="guard" x="-144" y="93">GBTimer==300</label>
+			<label kind="assignment" x="-229" y="42">ErrStat:=3</label>
+		</transition>
+		<transition id="id8">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-425" y="-8">ReqSet?</label>
+			<label kind="assignment" x="-425" y="8">GBTimer:=0</label>
+		</transition>
+		<transition id="id9">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-187" y="-85">GBTimer&gt;=100</label>
+			<label kind="synchronisation" x="-187" y="-68">GearNeu!</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id3"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-136" y="-42">GBTimer&gt;200</label>
+			<label kind="assignment" x="-136" y="-25">ErrStat:=4</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="59" y="-8">RegNeu?</label>
+			<label kind="assignment" x="59" y="9">GBTimer:=0</label>
+		</transition>
+	</template>
+	<template>
+		<name x="9" y="9">ClutchB1</name>
+		<declaration>// Place local declarations here.
+int ErrStat = 0;
+chan ClutchIsOpen, ClutchIsClosed, OpenClutch, CloseClutch;
+clock CTimer;
+</declaration>
+		<location id="id12" x="-561" y="-187">
+			<name x="-569" y="-221">Opening</name>
+			<label kind="invariant" x="-552" y="-238">CTimer &lt;= 150</label>
+		</location>
+		<location id="id13" x="-561" y="17">
+			<name x="-569" y="-17">Closed</name>
+		</location>
+		<location id="id14" x="-425" y="-85">
+			<name x="-433" y="-119">ErrorOpen</name>
+		</location>
+		<location id="id15" x="-153" y="-187">
+			<name x="-161" y="-221">Open</name>
+		</location>
+		<location id="id16" x="-289" y="-85">
+			<name x="-298" y="-119">ErrorClose</name>
+		</location>
+		<location id="id17" x="-153" y="17">
+			<name x="-136" y="-8">Closing</name>
+			<label kind="invariant" x="-136" y="8">CTimer &lt;= 150</label>
+		</location>
+		<init ref="id13"/>
+		<transition id="id18">
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-263" y="-102">CTimer == 150</label>
+			<label kind="assignment" x="-263" y="-85">ErrStat := 1</label>
+		</transition>
+		<transition id="id19">
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="-144" y="-102">CloseClutch?</label>
+			<label kind="assignment" x="-144" y="-119">CTimer := 0</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id12"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-391" y="-229">CTimer &gt;= 100</label>
+			<label kind="synchronisation" x="-391" y="-212">ClutchIsOpen!</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id17"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-408" y="-25">CTimer &gt;= 100</label>
+			<label kind="synchronisation" x="-408" y="-8">ClutchIsClosed!</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id12"/>
+			<target ref="id14"/>
+			<label kind="guard" x="-476" y="-161">CTimer == 150</label>
+			<label kind="assignment" x="-476" y="-144">ErrStat := 2</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-561" y="-102">OpenClutch?</label>
+			<label kind="assignment" x="-561" y="-85">CTimer := 0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Clutch = ClutchB1();
+GearBox = GearBoxB3();
+// List one or more processes to be composed into a system.
+system Clutch;
+</system>
+	<queries>
+		<query>
+			<formula>E&lt;&gt; Clutch.Closed
+</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>A&lt;&gt; not (Clutch.Closed and (Clutch.Open or Clutch.Closing or Clutch.Opening))
+</formula>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
