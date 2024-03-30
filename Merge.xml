@@ -307,9 +307,8 @@ GCTimer&lt;=250</label>
 	</template>
 	<template>
 		<name x="5" y="5">Engine</name>
-		<parameter>int &amp;ToGear, chan &amp;ReqSpeed, chan &amp;ReqTorque, chan &amp;ReqZeroTorque, chan &amp;TorqueZero, chan &amp;SpeedSet</parameter>
-		<declaration>clock ETimer;
-int UseCase;</declaration>
+		<parameter>int &amp;ToGear, chan &amp;ReqSpeed, chan &amp;ReqTorque, chan &amp;ReqZeroTorque, chan &amp;TorqueZero, chan &amp;SpeedSet, int &amp;UseCase</parameter>
+		<declaration>clock ETimer;</declaration>
 		<location id="id60" x="-76" y="-527">
 			<name x="-93" y="-578">DecTorque</name>
 			<label kind="invariant" x="-93" y="-561">ETimer&lt;=400</label>
@@ -339,6 +338,7 @@ int UseCase;</declaration>
 			<name x="-527" y="-17">ErrorSpeed</name>
 		</location>
 		<location id="id68" x="-187" y="-348">
+			<name x="-197" y="-382">Initial</name>
 		</location>
 		<init ref="id68"/>
 		<transition id="id69">
@@ -428,10 +428,8 @@ UseCase:=0</label>
 	</template>
 	<template>
 		<name>GearBox</name>
-		<parameter>chan &amp;ReqSet, chan &amp;ReqNeu, chan &amp;GearSet, chan &amp;GearNeu</parameter>
-		<declaration>
-int ErrStat;
-clock GBTimer;</declaration>
+		<parameter>chan &amp;ReqSet, chan &amp;ReqNeu, chan &amp;GearSet, chan &amp;GearNeu, int &amp;ErrStat</parameter>
+		<declaration>clock GBTimer;</declaration>
 		<location id="id83" x="-323" y="-51">
 			<name x="-333" y="-85">Neutral</name>
 		</location>
@@ -492,10 +490,8 @@ clock GBTimer;</declaration>
 	</template>
 	<template>
 		<name x="9" y="9">Clutch</name>
-		<parameter>chan &amp;OpenClutch, chan &amp;CloseClutch, chan &amp;ClutchIsOpen, chan &amp;ClutchIsClosed</parameter>
-		<declaration>
-int ErrStat = 0;
-clock CTimer;
+		<parameter>chan &amp;OpenClutch, chan &amp;CloseClutch, chan &amp;ClutchIsOpen, chan &amp;ClutchIsClosed, int &amp;ErrStat</parameter>
+		<declaration>clock CTimer;
 </declaration>
 		<location id="id95" x="-561" y="-187">
 			<name x="-569" y="-221">Opening</name>
@@ -772,15 +768,370 @@ gearControl = GearControl(FromGear, ToGear, ReqNewGear, NewGear, ReqSet, ReqNeu,
 
 
 // Third layer
-gearBox = GearBox(ReqSet, ReqNeu, GearSet, GearNeu);
-clutch = Clutch(OpenClutch, CloseClutch, ClutchIsOpen, ClutchIsClosed);
-engine = Engine(ToGear, ReqSpeed, ReqTorque, ReqZeroTorque, TorqueZero, SpeedSet);
+int ErrStat = 0;
+int UseCase = 0;
+gearBox = GearBox(ReqSet, ReqNeu, GearSet, GearNeu, ErrStat);
+clutch = Clutch(OpenClutch, CloseClutch, ClutchIsOpen, ClutchIsClosed, ErrStat);
+engine = Engine(ToGear, ReqSpeed, ReqTorque, ReqZeroTorque, TorqueZero, SpeedSet, UseCase);
 
 system interface, gearControl, gearBox, clutch, engine;</system>
 	<queries>
 		<query>
-			<formula/>
+			<formula>E&lt;&gt; gearControl.c_GearChanged</formula>
 			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:34:13 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; interface.Gear5</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:34:59 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; interface.GearR</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:35:12 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( gearControl.c_GearChanged and ( SysTimer&lt;=1000 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:37:14 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not ( gearBox.Neutral and 
+	( 	interface.Gear1 or interface.Gear2 or 
+		interface.Gear3 or interface.Gear4 or 
+		interface.Gear5 or interface.GearR ) )
+</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 22:49:02 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not ( gearBox.Idle and interface.GearN)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:41:16 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( interface.GearN imply gearBox.Neutral )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 22:44:35 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==0 and SysTimer&gt;=900) imply 
+	( gearControl.c_GearChanged or gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 22:56:49 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==0 and
+	SysTimer&gt;899 and SysTimer&lt;900 and
+	not ( gearControl.c_GearChanged or gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 23:17:52 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==0 and ( SysTimer&lt;150) ) imply
+	not ( gearControl.c_GearChanged ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 23:31:03 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==0 and gearControl.c_GearChanged and ( SysTimer==150 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 23:41:01 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==0 and FromGear&gt;0 and
+	ToGear&gt;0 and ( SysTimer&lt;400 ) ) imply
+	not ( gearControl.c_GearChanged ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 23:45:43 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==0 and FromGear&gt;0 and ToGear&gt;0 and 
+	gearControl.c_GearChanged and ( SysTimer==400 ) )
+</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 23:45:17 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (( ErrStat==0 and UseCase==1 and SysTimer&gt;1055) imply
+	( gearControl.c_GearChanged or gearControl.Gear ) )
+</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 23:56:42 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (( ErrStat==0 and UseCase==1 and SysTimer==1055) and
+	not ( gearControl.c_GearChanged or gearControl.Gear ) )
+</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-29 23:58:24 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (( ErrStat==0 and UseCase==1 and SysTimer&lt;550) imply
+	not ( gearControl.c_GearChanged or gearControl.Gear ) )
+</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-29 23:59:12 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==1 and gearControl.c_GearChanged and (  SysTimer==550 ) )
+</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:01:00 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==1 and FromGear&gt;0 and
+	ToGear&gt;0 and SysTimer&lt;700 ) imply
+	not ( gearControl.c_GearChanged and gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:05:40 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==1 and FromGear&gt;0 and ToGear&gt;0 and
+	gearControl.c_GearChanged and
+	( SysTimer==700 ) )
+</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:10:53 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==2 and SysTimer&gt;=1205 ) imply
+	( gearControl.c_GearChanged or gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:13:26 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==2 and SysTimer&gt;1204 and
+	SysTimer&lt;1205 and
+	not ( gearControl.c_GearChanged or gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:21:05 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( UseCase==2 and ( SysTimer&lt;450 ) ) imply
+	not ( gearControl.c_GearChanged or gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:22:19 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( UseCase==2 and gearControl.c_GearChanged and
+	( SysTimer==450 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:25:48 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( ErrStat==0 and UseCase==2 and FromGear&gt;0 and
+	ToGear&gt;0 and SysTimer&lt;750 ) imply
+	not ( gearControl.c_GearChanged and gearControl.Gear ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:28:36 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ( ErrStat==0 and UseCase==2 and FromGear&gt;0 and ToGear&gt;0 and
+	gearControl.c_GearChanged and
+	( SysTimer==750 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:30:58 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( clutch.ErrorClose and ( gearControl.GCTimer&gt;200 ) ) imply
+	gearControl.CCloseError )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:32:53 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( gearControl.CCloseError imply clutch.ErrorClose ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:33:48 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( clutch.ErrorOpen and ( gearControl.GCTimer&gt;200 ) ) imply
+	gearControl.COpenError ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:39:51 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.COpenError ) imply clutch.ErrorOpen ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:40:32 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearBox.ErrorIdle and ( gearControl.GCTimer&gt;350 ) ) imply
+	gearControl.GSetError ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:41:21 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.GSetError ) imply gearBox.ErrorIdle ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:42:18 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearBox.ErrorNeu and ( gearControl.GCTimer&gt;200 ) ) imply
+	gearControl.GNeuError ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:43:16 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.GNeuError ) imply gearBox.ErrorNeu ) </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 00:44:27 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not ( ErrStat==0 and engine.ErrorSpeed )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:44:48 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( interface.GearN imply
+	( ( ToGear==0 and engine.Zero ) or engine.Initial ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 01:36:22 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.GearR ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:48:33 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.Gear1 ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:49:04 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.Gear2 ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:49:18 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.Gear3 ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:50:42 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.Gear4 ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:50:45 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( ( gearControl.Gear and interface.Gear5 ) imply
+	engine.Torque ) </formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 00:50:40 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( clutch.Open imply
+	( gearControl.c_ClutchOpen or gearControl.c_ClutchOpen2 or
+	gearControl.CheckGearSet2 or gearControl.c_ReqSetGear2 or
+	gearControl.GNeuError or
+	gearControl.c_ClutchClose or
+	gearControl.CheckClutchClosed or
+	gearControl.CheckClutchClosed2 or
+	gearControl.CCloseError or
+	gearControl.GSetError or gearControl.CheckGearNeu2 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 01:10:12 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( clutch.Closed imply
+	( gearControl.c_ReqTorqueC or gearControl.c_GearChanged or
+	gearControl.Gear or gearControl.c_Initiate or
+	gearControl.CheckTorque or gearControl.c_ReqNeuGear or
+	gearControl.CheckGearNeu or gearControl.GNeuError or
+	gearControl.c_ReqSyncSpeed or
+	gearControl.CheckSyncSpeed or gearControl.c_ReqSetGear or
+	gearControl.CheckGearSet1 or gearControl.GSetError ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 01:12:45 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( gearBox.Idle imply
+	( gearControl.c_ClutchClose or
+	gearControl.CheckClutchClosed or
+	gearControl.CCloseError or
+	gearControl.c_ReqTorqueC or gearControl.c_GearChanged or
+	gearControl.Gear or gearControl.c_Initiate or
+	gearControl.CheckTorque or gearControl.c_ReqNeuGear or
+	gearControl.CheckClutch2 or gearControl.COpenError or
+	gearControl.c_ClutchOpen2 ) )</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-03-30 01:16:41 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( gearBox.Neutral imply
+	( gearControl.c_ReqSetGear or
+	gearControl.CheckClutchClosed2 or
+	gearControl.CCloseError or gearControl.c_ReqTorqueC or
+	gearControl.c_GearChanged or gearControl.Gear or
+	gearControl.c_Initiate or gearControl.c_ReqSyncSpeed or
+	gearControl.CheckSyncSpeed or gearControl.c_ReqSetGear or
+	gearControl.CheckClutch or gearControl.COpenError or
+	gearControl.c_ClutchOpen or gearControl.c_ReqSetGear2 ) )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 01:31:20 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( engine.Torque imply clutch.Closed )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 01:32:04 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ( 1 &gt; 0 )</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-03-30 01:32:31 +0100">
+			</result>
 		</query>
 	</queries>
 </nta>
