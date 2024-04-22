@@ -4,12 +4,138 @@
 	<declaration>// Place global declarations here.
 </declaration>
 	<template>
-		<name x="5" y="5">Template</name>
-		<declaration>// Place local declarations here.
-</declaration>
-		<location id="id0" x="0" y="0">
+		<name x="5" y="5">ESP Main Routine</name>
+		<parameter>chan &amp;SamplesACK, chan &amp;OTACheck, bool &amp;OTAServerReq, chan &amp;OTAESPComplete</parameter>
+		<declaration>
+
+int minSleepTime;
+
+clock ESPMainTimer;</declaration>
+		<location id="id0" x="-238" y="-34">
+			<name x="-248" y="-68">Sleeping</name>
 		</location>
-		<init ref="id0"/>
+		<location id="id1" x="102" y="340">
+			<name x="92" y="306">Received</name>
+		</location>
+		<location id="id2" x="476" y="340">
+			<name x="466" y="306">ACK Time Out</name>
+		</location>
+		<location id="id3" x="-68" y="-102">
+			<name x="-78" y="-136">Checking sensors sampling</name>
+		</location>
+		<location id="id4" x="272" y="340">
+			<name x="262" y="306">Pending ACK</name>
+		</location>
+		<location id="id5" x="272" y="204">
+			<name x="262" y="170">Sending</name>
+		</location>
+		<location id="id6" x="-68" y="340">
+			<name x="-78" y="306">Clearing buffer</name>
+		</location>
+		<location id="id7" x="484" y="-102">
+			<name x="474" y="-136">Sampling</name>
+		</location>
+		<location id="id8" x="561" y="-34">
+			<name x="551" y="-68">Buffering</name>
+		</location>
+		<location id="id9" x="374" y="102">
+			<name x="364" y="68">Checking batch policy</name>
+		</location>
+		<location id="id10" x="-68" y="102">
+			<name x="-78" y="68">Sending Hearbeat &amp; Logs</name>
+		</location>
+		<location id="id11" x="-340" y="102">
+			<name x="-323" y="68">Checking for OTA Update</name>
+		</location>
+		<location id="id12" x="-340" y="-102">
+			<name x="-350" y="-136">OTA Update</name>
+		</location>
+		<location id="id13" x="170" y="-102">
+			<name x="160" y="-136">Clocks Update</name>
+		</location>
+		<init ref="id3"/>
+		<transition id="id14">
+			<source ref="id13"/>
+			<target ref="id9"/>
+			<label kind="guard" x="204" y="0">samplingQueue.length == 0</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id13"/>
+			<target ref="id7"/>
+			<label kind="guard" x="188" y="-170">samplingQueue.length &gt; 0</label>
+		</transition>
+		<transition id="id16">
+			<source ref="id3"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="-85" y="-68">ESPMainTimer:=0
+minSleepTime:=getMinIdleTime()
+samplingQueue:=getSamplingQueue()</label>
+		</transition>
+		<transition id="id17">
+			<source ref="id12"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-263" y="-127">OTAESPComplete?</label>
+		</transition>
+		<transition id="id18">
+			<source ref="id11"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-510" y="8">OTAServerReq==true</label>
+			<label kind="synchronisation" x="-433" y="-17">OTAESPReq!</label>
+		</transition>
+		<transition id="id19">
+			<source ref="id11"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-272" y="17">OTAServerReq==false</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-246" y="85">OTACheck?</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id9"/>
+			<target ref="id10"/>
+		</transition>
+		<transition id="id22">
+			<source ref="id6"/>
+			<target ref="id10"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id8"/>
+			<target ref="id9"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id7"/>
+			<target ref="id8"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id0"/>
+			<target ref="id3"/>
+		</transition>
+		<transition id="id26">
+			<source ref="id1"/>
+			<target ref="id6"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id9"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id4"/>
+			<target ref="id1"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id2"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id4"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id31">
+			<source ref="id5"/>
+			<target ref="id4"/>
+		</transition>
 	</template>
 	<system>// Place template instantiations here.
 Process = Template();
