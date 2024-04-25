@@ -37,6 +37,7 @@ int textfiedLength;</declaration>
 		<transition id="id8">
 			<source ref="id2"/>
 			<target ref="id7"/>
+			<label kind="synchronisation" x="-527" y="-688">KeyPressEnd?</label>
 			<nail x="-510" y="-646"/>
 		</transition>
 		<transition id="id9">
