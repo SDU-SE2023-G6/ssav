@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name x="5" y="5">Editor</name>
+		<parameter>chan &amp;KeyPress, chan &amp;ReqValidation, chan &amp;RecValidationError, chan &amp;RecValidated, chan &amp;ReqCompile, chan &amp;RecCompileError, chan &amp;RecCompiled</parameter>
+		<declaration>// Place local declarations here.
+clock validationWait, compilationWait;
+int textfiedLength;</declaration>
+		<location id="id0" x="-884" y="-374">
+			<name x="-876" y="-425">Compiled</name>
+		</location>
+		<location id="id1" x="-373" y="-493">
+			<name x="-433" y="-561">ValidationError</name>
+		</location>
+		<location id="id2" x="-586" y="-586">
+			<name x="-612" y="-637">Writing</name>
+		</location>
+		<location id="id3" x="-246" y="-578">
+			<name x="-305" y="-663">AwaitingValidation</name>
+		</location>
+		<location id="id4" x="-645" y="-374">
+			<name x="-627" y="-417">AwaitingCompile</name>
+		</location>
+		<location id="id5" x="-799" y="-510">
+			<name x="-835" y="-553">CompileError</name>
+		</location>
+		<location id="id6" x="-245" y="-374">
+			<name x="-220" y="-408">Validated</name>
+		</location>
+		<location id="id7" x="-586" y="-697">
+			<name x="-603" y="-731">Empty</name>
+		</location>
+		<init ref="id7"/>
+		<transition id="id8">
+			<source ref="id2"/>
+			<target ref="id7"/>
+			<nail x="-510" y="-646"/>
+		</transition>
+		<transition id="id9">
+			<source ref="id7"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-731" y="-680">KeyPress?</label>
+			<nail x="-663" y="-646"/>
+		</transition>
+		<transition id="id10">
+			<source ref="id6"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-459" y="-365">ReqCompile!</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id6"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-374" y="-459">KeyPress?</label>
+			<nail x="-289" y="-433"/>
+			<nail x="-408" y="-433"/>
+		</transition>
+		<transition id="id12">
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-425" y="-646">ReqValidation!</label>
+			<nail x="-381" y="-612"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id3"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-229" y="-493">RecValidated?</label>
+		</transition>
+		<transition id="id14">
+			<source ref="id3"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-399" y="-544">RecValidationError?</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-416" y="-595">KeyPress?</label>
+			<nail x="-381" y="-570"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id4"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-825" y="-374">RecCompiled?</label>
+		</transition>
+		<transition id="id17">
+			<source ref="id5"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-757" y="-527">KeyPress?</label>
+			<nail x="-697" y="-510"/>
+		</transition>
+		<transition id="id18">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-791" y="-442">RecCompileError?</label>
+			<nail x="-791" y="-416"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id4"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-638" y="-450">KeyPress?</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-476" y="-535">KeyPress?</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-901" y="-620">KeyPress?</label>
+			<nail x="-884" y="-586"/>
+		</transition>
+	</template>
+	<template>
+		<name>Compiler</name>
+		<parameter>chan &amp;ReqCompile, chan &amp;SendCompileError, chan &amp;SendCompiled</parameter>
+		<location id="id22" x="-824" y="-382">
+			<name x="-901" y="-424">AwaitingCompilation</name>
+		</location>
+		<location id="id23" x="-535" y="-382">
+			<name x="-562" y="-425">Compiling</name>
+		</location>
+		<location id="id24" x="-629" y="-306">
+			<name x="-681" y="-349">CompileError</name>
+		</location>
+		<location id="id25" x="-433" y="-382">
+			<name x="-443" y="-416">Saving</name>
+		</location>
+		<init ref="id22"/>
+		<transition id="id26">
+			<source ref="id25"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="-697" y="-246">SendCompiled!</label>
+			<nail x="-433" y="-221"/>
+			<nail x="-824" y="-221"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id23"/>
+			<target ref="id25"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id23"/>
+			<target ref="id24"/>
+			<nail x="-552" y="-331"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id24"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="-782" y="-289">SendCompileError!</label>
+			<nail x="-748" y="-306"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id22"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="-714" y="-408">ReqCompile?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Validator</name>
+		<declaration>clock validationTime;</declaration>
+		<location id="id31" x="-603" y="-153">
+			<name x="-655" y="-196">ValidationError</name>
+		</location>
+		<location id="id32" x="-722" y="-229">
+			<name x="-799" y="-271">AwaitingValidation</name>
+		</location>
+		<location id="id33" x="-467" y="-102">
+			<name x="-442" y="-136">Validated</name>
+		</location>
+		<location id="id34" x="-467" y="-229">
+			<name x="-494" y="-272">Validating</name>
+		</location>
+		<init ref="id32"/>
+		<transition id="id35">
+			<source ref="id34"/>
+			<target ref="id31"/>
+			<nail x="-493" y="-153"/>
+		</transition>
+		<transition id="id36">
+			<source ref="id31"/>
+			<target ref="id32"/>
+			<nail x="-680" y="-153"/>
+		</transition>
+		<transition id="id37">
+			<source ref="id33"/>
+			<target ref="id32"/>
+			<nail x="-467" y="-42"/>
+			<nail x="-722" y="-42"/>
+		</transition>
+		<transition id="id38">
+			<source ref="id34"/>
+			<target ref="id33"/>
+		</transition>
+		<transition id="id39">
+			<source ref="id32"/>
+			<target ref="id34"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+chan TextfieldKeypress, ReqValidation, ValidationError, Validated, ReqCompile, CompileError, Compiled;
+editor = Editor(TextfieldKeypress, ReqValidation, ValidationError, Validated, ReqCompile, CompileError, Compiled);
+validator = Validator();
+compiler = Compiler(ReqCompile, CompileError, Compiled);
+
+// List one or more processes to be composed into a system.
+system editor, validator, compiler;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
