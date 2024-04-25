@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name x="5" y="5">Discovery Process</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-281" y="-229">
+			<name x="-382" y="-272">Request for resource list</name>
+		</location>
+		<location id="id1" x="-17" y="-229">
+			<name x="-144" y="-271">handler receive the request</name>
+		</location>
+		<location id="id2" x="263" y="-229">
+			<name x="169" y="-272">provide information list</name>
+		</location>
+		<location id="id3" x="-281" y="145">
+			<name x="-536" y="137">select a item from the list</name>
+		</location>
+		<location id="id4" x="-34" y="-60">
+			<name x="-127" y="-42">Display information</name>
+		</location>
+		<location id="id5" x="-417" y="-51">
+			<name x="-527" y="-59">Iot client</name>
+		</location>
+		<location id="id6" x="-119" y="136">
+			<name x="-221" y="153">Request for a item</name>
+		</location>
+		<location id="id7" x="50" y="136">
+			<name x="-42" y="153">handler receive the request</name>
+		</location>
+		<location id="id8" x="246" y="136">
+			<name x="229" y="153">provide the item</name>
+		</location>
+		<location id="id9" x="425" y="-51">
+			<name x="467" y="-59">get resource from DB</name>
+		</location>
+		<init ref="id5"/>
+		<transition id="id10">
+			<source ref="id9"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id11">
+			<source ref="id8"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id12">
+			<source ref="id9"/>
+			<target ref="id8"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id7"/>
+			<target ref="id8"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id6"/>
+			<target ref="id7"/>
+		</transition>
+		<transition id="id15">
+			<source ref="id3"/>
+			<target ref="id6"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id5"/>
+			<target ref="id3"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id5"/>
+			<target ref="id0"/>
+		</transition>
+		<transition id="id18">
+			<source ref="id5"/>
+			<target ref="id4"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id2"/>
+			<target ref="id5"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id1"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id21">
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Registration Process</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id22" x="-612" y="221">
+			<name x="-697" y="212">client</name>
+		</location>
+		<location id="id23" x="-374" y="-8">
+			<name x="-467" y="25">gets the name and data</name>
+		</location>
+		<location id="id24" x="-102" y="-9">
+			<name x="-187" y="-51">data put in the payload</name>
+		</location>
+		<location id="id25" x="103" y="-8">
+			<name x="42" y="-51">Send request message</name>
+		</location>
+		<location id="id26" x="331" y="-8">
+			<name x="365" y="-25">server receives the message</name>
+		</location>
+		<location id="id27" x="331" y="195">
+			<name x="263" y="229">parses the RAML data</name>
+		</location>
+		<location id="id28" x="102" y="195">
+			<name x="42" y="229">inserts into DB</name>
+		</location>
+		<location id="id29" x="-612" y="-8">
+			<name x="-765" y="-25">Read RAML data</name>
+		</location>
+		<location id="id30" x="102" y="85">
+			<name x="59" y="68">Ack</name>
+		</location>
+		<location id="id31" x="-612" y="-153">
+			<name x="-663" y="-204">Invalid data</name>
+		</location>
+		<init ref="id22"/>
+		<transition id="id32">
+			<source ref="id29"/>
+			<target ref="id31"/>
+		</transition>
+		<transition id="id33">
+			<source ref="id30"/>
+			<target ref="id22"/>
+		</transition>
+		<transition id="id34">
+			<source ref="id28"/>
+			<target ref="id30"/>
+		</transition>
+		<transition id="id35">
+			<source ref="id26"/>
+			<target ref="id30"/>
+		</transition>
+		<transition id="id36">
+			<source ref="id29"/>
+			<target ref="id23"/>
+		</transition>
+		<transition id="id37">
+			<source ref="id22"/>
+			<target ref="id29"/>
+		</transition>
+		<transition id="id38">
+			<source ref="id27"/>
+			<target ref="id28"/>
+		</transition>
+		<transition id="id39">
+			<source ref="id26"/>
+			<target ref="id27"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id25"/>
+			<target ref="id26"/>
+		</transition>
+		<transition id="id41">
+			<source ref="id24"/>
+			<target ref="id25"/>
+		</transition>
+		<transition id="id42">
+			<source ref="id23"/>
+			<target ref="id24"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
