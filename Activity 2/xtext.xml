@@ -5,217 +5,225 @@
 </declaration>
 	<template>
 		<name x="5" y="5">Editor</name>
-		<parameter>chan &amp;KeyPress, chan &amp;KeyPressEnd, chan &amp;ReqValidation, chan &amp;RecValidationError, chan &amp;RecValidated, chan &amp;ReqCompile, chan &amp;RecCompileError, chan &amp;RecCompiled</parameter>
+		<parameter>chan &amp;KeyPress, chan &amp;KeyPressEnd, chan &amp;ReqCompile, chan &amp;RecCompileError, chan &amp;RecCompiled</parameter>
 		<declaration>// Place local declarations here.
-clock validationWait, compilationWait;
-int textfiedLength;</declaration>
-		<location id="id0" x="-884" y="-204">
-			<name x="-876" y="-255">Compiled</name>
+clock validationWait, compilationWait, loadTime;
+int contentLength;
+int contentId;
+int loadingRetryCount;
+
+//0 empty, 1 awaiting compile, 2 compile error, 3 compiled
+int loadState;</declaration>
+		<location id="id0" x="-1606" y="-272">
+			<name x="-1598" y="-306">Compiled</name>
 		</location>
-		<location id="id1" x="-289" y="-450">
-			<name x="-357" y="-433">ValidationError</name>
+		<location id="id1" x="-1088" y="-553">
+			<name x="-1147" y="-595">ValidationError</name>
 		</location>
-		<location id="id2" x="-586" y="-586">
-			<name x="-612" y="-637">Writing</name>
+		<location id="id2" x="-1308" y="-654">
+			<name x="-1334" y="-705">Writing</name>
 		</location>
-		<location id="id3" x="-136" y="-510">
-			<name x="-144" y="-561">AwaitingValidation</name>
+		<location id="id3" x="-1308" y="-272">
+			<name x="-1290" y="-315">Compiling</name>
 		</location>
-		<location id="id4" x="-586" y="-204">
-			<name x="-568" y="-247">AwaitingCompile</name>
+		<location id="id4" x="-1487" y="-493">
+			<name x="-1523" y="-536">CompileError</name>
 		</location>
-		<location id="id5" x="-765" y="-450">
-			<name x="-801" y="-493">CompileError</name>
+		<location id="id5" x="-875" y="-425">
+			<name x="-850" y="-459">Validated</name>
 		</location>
-		<location id="id6" x="-136" y="-204">
-			<name x="-111" y="-238">Validated</name>
+		<location id="id6" x="-1309" y="-765">
+			<name x="-1326" y="-799">Empty</name>
 		</location>
-		<location id="id7" x="-586" y="-697">
-			<name x="-603" y="-731">Empty</name>
+		<location id="id7" x="-1972" y="-765">
+			<name x="-2031" y="-808">Unloaded</name>
 		</location>
-		<location id="id8" x="-297" y="-586">
-			<name x="-348" y="-620">ChangedContent</name>
+		<location id="id8" x="-1717" y="-765">
+			<name x="-1734" y="-799">Loaded</name>
+			<label kind="invariant" x="-1887" y="-859">(contentLength==0 &amp;&amp; loadState == 0) ||
+(contentLength&gt;0 &amp;&amp; loadState &gt;= 1 &amp;&amp; loadState &lt;=3)</label>
 		</location>
+		<location id="id9" x="-1980" y="-646">
+			<name x="-2031" y="-680">LoadingFailure</name>
+		</location>
+		<branchpoint id="id10" x="-875" y="-655"/>
 		<init ref="id7"/>
-		<transition id="id9">
-			<source ref="id8"/>
-			<target ref="id3"/>
-			<label kind="synchronisation" x="-365" y="-561">ReqValidation!</label>
-		</transition>
-		<transition id="id10">
-			<source ref="id2"/>
-			<target ref="id8"/>
-			<label kind="synchronisation" x="-493" y="-612">KeyPressEnd?</label>
-		</transition>
 		<transition id="id11">
-			<source ref="id2"/>
-			<target ref="id7"/>
-			<label kind="synchronisation" x="-527" y="-688">KeyPressEnd?</label>
-			<nail x="-510" y="-646"/>
+			<source ref="id10"/>
+			<target ref="id5"/>
+			<label kind="probability" x="-867" y="-587">10</label>
 		</transition>
 		<transition id="id12">
-			<source ref="id7"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="-731" y="-680">KeyPress?</label>
-			<nail x="-663" y="-646"/>
+			<source ref="id10"/>
+			<target ref="id1"/>
+			<label kind="probability" x="-952" y="-587">1</label>
+			<nail x="-943" y="-553"/>
 		</transition>
-		<transition id="id13">
-			<source ref="id6"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="-416" y="-229">ReqCompile!</label>
+		<transition id="id13" controllable="false">
+			<source ref="id2"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-1079" y="-697">contentLength &gt; 0</label>
+			<label kind="synchronisation" x="-1079" y="-680">KeyPressEnd?</label>
 		</transition>
 		<transition id="id14">
-			<source ref="id6"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="-510" y="-382">KeyPress?</label>
-			<nail x="-314" y="-357"/>
-			<nail x="-586" y="-357"/>
+			<source ref="id7"/>
+			<target ref="id8"/>
 		</transition>
 		<transition id="id15">
-			<source ref="id3"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="-476" y="-535">KeyPress?</label>
-			<nail x="-586" y="-510"/>
+			<source ref="id9"/>
+			<target ref="id7"/>
+			<nail x="-2065" y="-646"/>
 		</transition>
 		<transition id="id16">
-			<source ref="id3"/>
-			<target ref="id6"/>
-			<label kind="synchronisation" x="-127" y="-476">RecValidated?</label>
+			<source ref="id7"/>
+			<target ref="id9"/>
+			<label kind="guard" x="-1929" y="-723">loadTime &gt;=1000</label>
+			<nail x="-1887" y="-646"/>
 		</transition>
 		<transition id="id17">
-			<source ref="id3"/>
-			<target ref="id1"/>
-			<label kind="synchronisation" x="-382" y="-501">RecValidationError?</label>
+			<source ref="id8"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-1291" y="-204">loadState == 1</label>
+			<nail x="-1717" y="-153"/>
+			<nail x="-1308" y="-153"/>
 		</transition>
 		<transition id="id18">
-			<source ref="id4"/>
-			<target ref="id0"/>
-			<label kind="synchronisation" x="-799" y="-195">RecCompiled?</label>
+			<source ref="id8"/>
+			<target ref="id4"/>
+			<label kind="guard" x="-1623" y="-204">loadState == 2</label>
+			<nail x="-1717" y="-153"/>
+			<nail x="-1487" y="-153"/>
 		</transition>
 		<transition id="id19">
-			<source ref="id5"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="-688" y="-476">KeyPress?</label>
-			<nail x="-586" y="-450"/>
+			<source ref="id8"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-1853" y="-323">loadState == 3</label>
+			<nail x="-1717" y="-272"/>
 		</transition>
 		<transition id="id20">
-			<source ref="id4"/>
-			<target ref="id5"/>
-			<label kind="synchronisation" x="-748" y="-425">RecCompileError?</label>
-			<nail x="-765" y="-314"/>
+			<source ref="id8"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-1615" y="-757">loadState==0</label>
 		</transition>
 		<transition id="id21">
-			<source ref="id4"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="-578" y="-289">KeyPress?</label>
+			<source ref="id2"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-1249" y="-748">contentLength == 0</label>
+			<label kind="synchronisation" x="-1249" y="-765">KeyPressEnd?</label>
+			<label kind="assignment" x="-1249" y="-731">loadState:=0</label>
+			<nail x="-1249" y="-714"/>
 		</transition>
 		<transition id="id22">
-			<source ref="id1"/>
+			<source ref="id6"/>
 			<target ref="id2"/>
-			<label kind="synchronisation" x="-484" y="-476">KeyPress?</label>
-			<nail x="-586" y="-450"/>
+			<label kind="synchronisation" x="-1453" y="-722">KeyPress?</label>
+			<nail x="-1368" y="-714"/>
 		</transition>
 		<transition id="id23">
+			<source ref="id5"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-1071" y="-298">ReqCompile!</label>
+			<label kind="assignment" x="-1071" y="-272">loadState:=1</label>
+			<nail x="-875" y="-272"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id5"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-1232" y="-450">KeyPress?</label>
+			<nail x="-1071" y="-425"/>
+			<nail x="-1308" y="-425"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-1479" y="-297">RecCompiled?</label>
+			<label kind="assignment" x="-1479" y="-272">loadState:=3</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id4"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-1428" y="-519">KeyPress?</label>
+			<nail x="-1309" y="-493"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-1470" y="-408">RecCompileError?</label>
+			<label kind="assignment" x="-1469" y="-382">loadState:=2</label>
+			<nail x="-1351" y="-382"/>
+			<nail x="-1487" y="-382"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-1291" y="-349">KeyPress?</label>
+		</transition>
+		<transition id="id29">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-1258" y="-578">KeyPress?</label>
+			<nail x="-1309" y="-553"/>
+		</transition>
+		<transition id="id30">
 			<source ref="id0"/>
 			<target ref="id2"/>
-			<label kind="synchronisation" x="-714" y="-535">KeyPress?</label>
-			<nail x="-884" y="-510"/>
-			<nail x="-586" y="-510"/>
+			<label kind="synchronisation" x="-1529" y="-604">KeyPress?</label>
+			<nail x="-1606" y="-578"/>
+			<nail x="-1308" y="-578"/>
 		</transition>
 	</template>
 	<template>
 		<name>Compiler</name>
 		<parameter>chan &amp;ReqCompile, chan &amp;SendCompileError, chan &amp;SendCompiled</parameter>
-		<location id="id24" x="-824" y="-382">
-			<name x="-901" y="-424">AwaitingCompilation</name>
+		<declaration>clock compileTime;</declaration>
+		<location id="id31" x="-960" y="-425">
+			<name x="-1037" y="-467">AwaitingCompilation</name>
 		</location>
-		<location id="id25" x="-535" y="-382">
-			<name x="-562" y="-425">Compiling</name>
+		<location id="id32" x="-671" y="-425">
+			<name x="-698" y="-468">Compiling</name>
 		</location>
-		<location id="id26" x="-629" y="-306">
-			<name x="-681" y="-349">CompileError</name>
+		<location id="id33" x="-756" y="-348">
+			<name x="-807" y="-382">CompileError</name>
 		</location>
-		<location id="id27" x="-433" y="-382">
-			<name x="-443" y="-416">Saving</name>
+		<location id="id34" x="-569" y="-425">
+			<name x="-579" y="-459">Saving</name>
 		</location>
-		<init ref="id24"/>
-		<transition id="id28">
-			<source ref="id27"/>
-			<target ref="id24"/>
-			<label kind="synchronisation" x="-697" y="-246">SendCompiled!</label>
-			<nail x="-433" y="-221"/>
-			<nail x="-824" y="-221"/>
+		<init ref="id31"/>
+		<transition id="id35">
+			<source ref="id34"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-807" y="-289">SendCompiled!</label>
+			<nail x="-569" y="-264"/>
+			<nail x="-960" y="-264"/>
 		</transition>
-		<transition id="id29">
-			<source ref="id25"/>
-			<target ref="id27"/>
+		<transition id="id36">
+			<source ref="id32"/>
+			<target ref="id34"/>
 		</transition>
-		<transition id="id30">
-			<source ref="id25"/>
-			<target ref="id26"/>
-			<nail x="-552" y="-331"/>
-		</transition>
-		<transition id="id31">
-			<source ref="id26"/>
-			<target ref="id24"/>
-			<label kind="synchronisation" x="-782" y="-289">SendCompileError!</label>
-			<nail x="-748" y="-306"/>
-		</transition>
-		<transition id="id32">
-			<source ref="id24"/>
-			<target ref="id25"/>
-			<label kind="synchronisation" x="-714" y="-408">ReqCompile?</label>
-		</transition>
-	</template>
-	<template>
-		<name>Validator</name>
-		<declaration>clock validationTime;</declaration>
-		<location id="id33" x="-603" y="-153">
-			<name x="-655" y="-196">ValidationError</name>
-		</location>
-		<location id="id34" x="-722" y="-229">
-			<name x="-799" y="-271">AwaitingValidation</name>
-		</location>
-		<location id="id35" x="-467" y="-102">
-			<name x="-442" y="-136">Validated</name>
-		</location>
-		<location id="id36" x="-467" y="-229">
-			<name x="-494" y="-272">Validating</name>
-		</location>
-		<init ref="id34"/>
 		<transition id="id37">
-			<source ref="id36"/>
+			<source ref="id32"/>
 			<target ref="id33"/>
-			<nail x="-493" y="-153"/>
+			<nail x="-671" y="-348"/>
 		</transition>
 		<transition id="id38">
 			<source ref="id33"/>
-			<target ref="id34"/>
-			<nail x="-680" y="-153"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-918" y="-348">SendCompileError!</label>
+			<nail x="-926" y="-348"/>
 		</transition>
 		<transition id="id39">
-			<source ref="id35"/>
-			<target ref="id34"/>
-			<nail x="-467" y="-42"/>
-			<nail x="-722" y="-42"/>
-		</transition>
-		<transition id="id40">
-			<source ref="id36"/>
-			<target ref="id35"/>
-		</transition>
-		<transition id="id41">
-			<source ref="id34"/>
-			<target ref="id36"/>
+			<source ref="id31"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-850" y="-451">ReqCompile?</label>
 		</transition>
 	</template>
 	<system>// Place template instantiations here.
-chan TextfieldKeypress,TextfieldKeypressEnd, ReqValidation, ValidationError, Validated, ReqCompile, CompileError, Compiled;
-editor = Editor(TextfieldKeypress, TextfieldKeypressEnd, ReqValidation, ValidationError, Validated, ReqCompile, CompileError, Compiled);
-validator = Validator();
+chan TextfieldKeypress,TextfieldKeypressEnd, ReqCompile, CompileError, Compiled;
+editor = Editor(TextfieldKeypress, TextfieldKeypressEnd, ReqCompile, CompileError, Compiled);
 compiler = Compiler(ReqCompile, CompileError, Compiled);
 
 // List one or more processes to be composed into a system.
-system editor, validator, compiler;
+system editor, compiler;
 </system>
 	<queries>
 		<query>
