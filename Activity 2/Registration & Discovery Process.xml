@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+</declaration>
+	<template>
+		<name x="5" y="5">Discovery Process</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-281" y="-229">
+			<name x="-382" y="-272">Request for resource list</name>
+		</location>
+		<location id="id1" x="-17" y="-229">
+			<name x="-144" y="-271">handler receive the request</name>
+		</location>
+		<location id="id2" x="246" y="-229">
+			<name x="152" y="-272">provide information list</name>
+		</location>
+		<location id="id3" x="-281" y="145">
+			<name x="-536" y="137">select a item from the list</name>
+		</location>
+		<location id="id4" x="722" y="-229">
+			<name x="629" y="-211">Display information list</name>
+		</location>
+		<location id="id5" x="-417" y="-51">
+			<name x="-527" y="-59">Iot client</name>
+		</location>
+		<location id="id6" x="-119" y="144">
+			<name x="-221" y="161">Request for a item</name>
+		</location>
+		<location id="id7" x="51" y="144">
+			<name x="-41" y="161">handler receive the request</name>
+		</location>
+		<location id="id8" x="246" y="153">
+			<name x="229" y="170">provide the item</name>
+		</location>
+		<location id="id9" x="246" y="-102">
+			<name x="288" y="-110">provide list from DB</name>
+		</location>
+		<location id="id10" x="127" y="-102">
+			<name x="-77" y="-110">request list from DB</name>
+		</location>
+		<location id="id11" x="714" y="153">
+			<name x="621" y="171">Display the item</name>
+		</location>
+		<location id="id12" x="476" y="-229">
+			<name x="399" y="-272">client gets information list</name>
+		</location>
+		<location id="id13" x="476" y="153">
+			<name x="408" y="178">client gets the item</name>
+		</location>
+		<location id="id14" x="127" y="42">
+			<name x="-102" y="34">request the item from DB</name>
+		</location>
+		<location id="id15" x="246" y="42">
+			<name x="288" y="34">provide the item from DB</name>
+		</location>
+		<init ref="id5"/>
+		<transition id="id16">
+			<source ref="id15"/>
+			<target ref="id8"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id1"/>
+			<target ref="id10"/>
+		</transition>
+		<transition id="id18">
+			<source ref="id7"/>
+			<target ref="id14"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<nail x="722" y="-331"/>
+			<nail x="-416" y="-331"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id13"/>
+			<target ref="id11"/>
+		</transition>
+		<transition id="id21">
+			<source ref="id8"/>
+			<target ref="id13"/>
+		</transition>
+		<transition id="id22">
+			<source ref="id12"/>
+			<target ref="id4"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id2"/>
+			<target ref="id12"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id10"/>
+			<target ref="id9"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id9"/>
+			<target ref="id2"/>
+		</transition>
+		<transition id="id26">
+			<source ref="id6"/>
+			<target ref="id7"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id3"/>
+			<target ref="id6"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id5"/>
+			<target ref="id3"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id5"/>
+			<target ref="id0"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id0"/>
+			<target ref="id1"/>
+		</transition>
+		<transition id="id31">
+			<source ref="id14"/>
+			<target ref="id15"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Registration Process</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id32" x="-612" y="221">
+			<name x="-697" y="212">client</name>
+		</location>
+		<location id="id33" x="-374" y="-8">
+			<name x="-467" y="25">gets the name and data</name>
+		</location>
+		<location id="id34" x="-102" y="-9">
+			<name x="-187" y="-51">data put in the payload</name>
+		</location>
+		<location id="id35" x="103" y="-8">
+			<name x="42" y="-51">Send request message</name>
+		</location>
+		<location id="id36" x="331" y="-8">
+			<name x="365" y="-25">server receives the message</name>
+		</location>
+		<location id="id37" x="331" y="195">
+			<name x="263" y="229">parses the RAML data</name>
+		</location>
+		<location id="id38" x="102" y="195">
+			<name x="42" y="229">inserts into DB</name>
+		</location>
+		<location id="id39" x="-612" y="-8">
+			<name x="-765" y="-25">Read RAML data</name>
+		</location>
+		<location id="id40" x="-34" y="195">
+			<name x="-51" y="229">Ack</name>
+		</location>
+		<location id="id41" x="-612" y="-153">
+			<name x="-663" y="-204">Invalid data</name>
+		</location>
+		<location id="id42" x="331" y="-110">
+			<name x="323" y="-170">Ack</name>
+		</location>
+		<init ref="id32"/>
+		<transition id="id43">
+			<source ref="id36"/>
+			<target ref="id42"/>
+		</transition>
+		<transition id="id44">
+			<source ref="id39"/>
+			<target ref="id41"/>
+		</transition>
+		<transition id="id45">
+			<source ref="id38"/>
+			<target ref="id40"/>
+		</transition>
+		<transition id="id46">
+			<source ref="id39"/>
+			<target ref="id33"/>
+		</transition>
+		<transition id="id47">
+			<source ref="id32"/>
+			<target ref="id39"/>
+		</transition>
+		<transition id="id48">
+			<source ref="id37"/>
+			<target ref="id38"/>
+		</transition>
+		<transition id="id49">
+			<source ref="id36"/>
+			<target ref="id37"/>
+		</transition>
+		<transition id="id50">
+			<source ref="id35"/>
+			<target ref="id36"/>
+		</transition>
+		<transition id="id51">
+			<source ref="id34"/>
+			<target ref="id35"/>
+		</transition>
+		<transition id="id52">
+			<source ref="id33"/>
+			<target ref="id34"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Process = Template();
+// List one or more processes to be composed into a system.
+system Process;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
