@@ -135,10 +135,11 @@ sens_id samplingQueueDequeue()
 int idleTime = 0;
 
 int getIdleTime(){
-    int min = sensors[0].samplingRate - samplingClock[0];
-    int i;
+    int min = sensors[0].samplingRate;
+    int i = 0;
     for (i = 1; i &lt; nSensors; i++) {
-        int tUntilSamplingOfSensor = sensors[i].samplingRate - samplingClock[i];
+        int tUntilSamplingOfSensor = 0;
+        tUntilSamplingOfSensor = sensors[i].samplingRate;
         if (tUntilSamplingOfSensor &lt; min) {
             min = tUntilSamplingOfSensor;
         }
