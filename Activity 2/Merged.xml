@@ -822,7 +822,7 @@ bool updateAvailable = false;</declaration>
 	<system>
 
 chan reqRegistration, registrationACK, OTAUpdate, OTAUpdated, satelliteBoot, OTAChecked, OTACheck, sensorDataSent, serverACKReceived;
-int requireOTA = false;
+bool requireOTA = false;
 satelliteMainRoutine = SatelliteMainRoutine(OTAUpdated, OTAUpdate, OTAChecked, OTACheck, satelliteBoot, sensorDataSent, serverACKReceived, requireOTA);
 
 
