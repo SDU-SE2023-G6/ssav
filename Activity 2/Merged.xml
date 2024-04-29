@@ -897,7 +897,7 @@ void updateDeviceHash() {
 		</transition>
 	</template>
 	<system>chan reqRegistration, registrationACK, RequireOTA, OTAUpdate, OTAUpdated, satelliteBoot, OTAChecked, OTACheck, sensorDataSent, serverACKReceived;
-bool requireOTA = false;
+bool requireOTA = true;
 satelliteMainRoutine = SatelliteMainRoutine(OTAUpdated, OTAUpdate, OTAChecked, OTACheck, satelliteBoot, sensorDataSent, serverACKReceived, requireOTA);
 
 
@@ -918,7 +918,7 @@ satelliteOTAUpdate = SatelliteOTAUpdate(OTAUpdate, RequireOTA, OTAChecked, OTAUp
 satelliteRegistration  =  SatelliteRegistration(reqRegistration, registrationACK, OTAUpdate, OTAUpdated, satelliteBoot);
 
 
-system satelliteSensor, satelliteMainRoutine, satelliteRegistration, serverRegistration, xtextCompiler;</system>
+system satelliteSensor, satelliteMainRoutine, satelliteRegistration, serverRegistration, xtextCompiler, satelliteOTAUpdate;</system>
 	<queries>
 		<query>
 			<formula/>
