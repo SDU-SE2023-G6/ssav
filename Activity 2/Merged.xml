@@ -110,7 +110,7 @@ void samplingQueueAdd(sens_id sensor){
 void updateSamplingQueue(){
     int i;
     for (i = 0; i &lt; nSensors; i++) {
-        if (sensors[i].samplingRate &lt; samplingClock[i]) {
+        if (100 &lt; samplingClock[i]) {
             samplingQueueAdd(i);
         }
     }
@@ -914,11 +914,11 @@ bool requireOTA = true;
 satelliteMainRoutine = SatelliteMainRoutine(OTAUpdated, OTAUpdate, OTAChecked, OTACheck, satelliteBoot, sensorDataSent, serverACKReceived, requireOTA);
 
 
-satelliteSensor0 = SatelliteSensor(sampleSensor[0], sampledSensor[0], samplingClock[0])
+satelliteSensor0 = SatelliteSensor(sampleSensor[0], sampledSensor[0], samplingClock[0]);
 
-satelliteSensor1 = SatelliteSensor(sampleSensor[1], sampledSensor[1], samplingClock[1])
+satelliteSensor1 = SatelliteSensor(sampleSensor[1], sampledSensor[1], samplingClock[1]);
 
-satelliteSensor2 = SatelliteSensor(sampleSensor[2], sampledSensor[2], samplingClock[2])
+satelliteSensor2 = SatelliteSensor(sampleSensor[2], sampledSensor[2], samplingClock[2]);
 
 
 
@@ -936,7 +936,7 @@ satelliteOTACheck = SatelliteOTACheck(OTACheck, OTAChecked, requireOTA, ServerHa
 satelliteRegistration  =  SatelliteRegistration(reqRegistration, registrationACK, OTAUpdate, OTAUpdated, satelliteBoot);
 
 
-system satelliteSensor0, satelliteSensor1, satelliteSensor2, satelliteSensor, satelliteMainRoutine, satelliteRegistration, serverRegistration, xtextCompiler, satelliteOTAUpdate, satelliteOTACheck;</system>
+system satelliteSensor0, satelliteSensor1, satelliteSensor2, satelliteMainRoutine, satelliteRegistration, serverRegistration, xtextCompiler, satelliteOTAUpdate, satelliteOTACheck;</system>
 	<queries>
 		<query>
 			<formula/>
