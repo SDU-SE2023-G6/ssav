@@ -1,0 +1,1161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+// :: Batch Policy configuration ::
+const int batchSizePolicy = 100;
+const int batchRatePolicy = 500;
+
+const int initialSamplingRate = 25;
+const int heartBeatRate = 20;
+// ::
+
+// :: Satellite sensors configuration :: 
+
+const int nSensors = 3; // Number of sensors on a satellite
+
+typedef int[0,nSensors-1] sens_id; // Sensors id (from 0 to nSensors-1)
+
+// Sensors data
+typedef struct {
+    int samplingRate;
+} sensor_t;
+
+clock samplingClock[nSensors];
+chan sampleSensor[nSensors], sampledSensor[nSensors];
+
+// Configuration of sensors on the sattelite ({sampling Rate})
+sensor_t sensors[nSensors] = {
+    {initialSamplingRate},
+    {50},
+    {300}
+};
+
+// ::
+
+
+// :: Server
+
+bool SatelliteRegisteredWithServer = false;
+int ServerHash = 0;
+
+// :: OTA
+int SatelliteHash = -1;
+int ActivePartition = 1;
+
+// ::
+
+</declaration>
+	<template>
+		<name>SatelliteSensor</name>
+		<parameter>chan &amp;sample, chan &amp;sampled, clock &amp;samplingClock</parameter>
+		<location id="id0" x="-680" y="-238">
+			<name x="-697" y="-272">Idle</name>
+		</location>
+		<location id="id1" x="-510" y="-136">
+			<name x="-544" y="-119">Sampling</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id2">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-765" y="-187">sampled!</label>
+			<label kind="assignment" x="-850" y="-170">samplingClock := 0</label>
+			<nail x="-680" y="-136"/>
+		</transition>
+		<transition id="id3">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-578" y="-263">sample?</label>
+			<nail x="-510" y="-238"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">SatelliteMainRoutine</name>
+		<parameter>chan &amp;OTAUpdated, chan &amp;OTAUpdate, chan &amp;OTAChecked, chan &amp;OTACheck, chan &amp;satelliteBoot, chan &amp;sensorDataSent, chan &amp;serverACKReceived, bool &amp;requireOTA, chan &amp;saveData, chan &amp;dataSaved</parameter>
+		<declaration>const int maxSampleMemoryHolding = batchSizePolicy * 2;
+typedef int[0,maxSampleMemoryHolding-1] samp_id; // Sample id
+const int sendingTimeout = 200;
+
+// Samples list
+sens_id samples[maxSampleMemoryHolding+1];
+int[0,maxSampleMemoryHolding] samplesLength;
+
+void samplesAdd(sens_id sample_source){
+    samples[samplesLength++] = sample_source;
+}
+
+void clearSamples(){
+    int i = 0;
+    while (i &lt; samplesLength)
+    {
+        samples[i] = 0;
+        i++;
+    }
+    samplesLength = 0;
+}
+
+
+// Sensors sampling queue
+sens_id samplingQueue[nSensors];
+int[0,nSensors] samplingQueueLength = 0;
+
+sens_id sampleTargetId = 0;
+
+// Add a sensor to the sampling queue
+void samplingQueueAdd(sens_id sensor){
+    samplingQueue[samplingQueueLength++] = sensor;
+}
+
+// Add all sensors late on sampling to the sampling queue
+
+int sensorSamplingQueueIndex = 0;
+
+
+// Return and remove the front element of the queue
+sens_id samplingQueueDequeue()
+{
+    int i = 0;
+    sens_id dequedValue = samplingQueue[0];
+    samplingQueueLength -= 1;
+    
+    while (i &lt; samplingQueueLength)
+    {
+        samplingQueue[i] = samplingQueue[i + 1];
+        i++;
+    }
+
+    return dequedValue;
+}
+
+// Idle time 
+
+int idleTime = 0;
+
+int getIdleTime(){
+    int min = sensors[0].samplingRate;
+    int i = 0;
+    for (i = 1; i &lt; nSensors; i++) {
+        int tUntilSamplingOfSensor = 0;
+        tUntilSamplingOfSensor = sensors[i].samplingRate;
+        if (tUntilSamplingOfSensor &lt; min) {
+            min = tUntilSamplingOfSensor;
+        }
+    }
+
+    if (batchRatePolicy &lt; min) {
+       min = batchRatePolicy;
+    }
+
+    if (heartBeatRate &lt; min) {
+       min = heartBeatRate;
+    }
+    return min;
+}
+
+
+clock sleepClock, timeoutClock, batchClock;
+
+</declaration>
+		<location id="id4" x="-68" y="-442">
+			<name x="-297" y="-476">NextSensor</name>
+		</location>
+		<location id="id5" x="204" y="-442">
+			<name x="194" y="-476">SensorNeedSampling</name>
+		</location>
+		<location id="id6" x="459" y="212">
+			<name x="468" y="186">batchSizePolicyTrue</name>
+		</location>
+		<location id="id7" x="357" y="212">
+			<name x="170" y="187">BatchRatePolicyTrue</name>
+		</location>
+		<location id="id8" x="-323" y="-34">
+			<name x="-391" y="-68">Sleeping</name>
+		</location>
+		<location id="id9" x="-68" y="433">
+			<name x="-59" y="399">Received</name>
+		</location>
+		<location id="id10" x="680" y="297">
+			<name x="670" y="263">ACKTimeOut</name>
+		</location>
+		<location id="id11" x="-161" y="-102">
+			<name x="-254" y="-136">CheckingSensorsSampling</name>
+		</location>
+		<location id="id12" x="408" y="433">
+			<name x="425" y="408">PendingACK</name>
+		</location>
+		<location id="id13" x="408" y="297">
+			<name x="425" y="271">Sending</name>
+		</location>
+		<location id="id14" x="952" y="-136">
+			<name x="960" y="-161">Sampling</name>
+		</location>
+		<location id="id15" x="773" y="-203">
+			<name x="756" y="-237">Buffering</name>
+		</location>
+		<location id="id16" x="408" y="102">
+			<name x="425" y="76">CheckingBatchPolicy</name>
+		</location>
+		<location id="id17" x="-68" y="102">
+			<name x="-127" y="68">SendingHearbeatAndLogs</name>
+		</location>
+		<location id="id18" x="-323" y="102">
+			<name x="-408" y="119">CheckingForOTAUpdate</name>
+		</location>
+		<location id="id19" x="-425" y="-102">
+			<name x="-476" y="-136">Updating</name>
+		</location>
+		<location id="id20" x="408" y="-102">
+			<name x="425" y="-127">ClocksUpdate</name>
+		</location>
+		<location id="id21" x="-246" y="-187">
+			<name x="-246" y="-230">Idle</name>
+		</location>
+		<location id="id22" x="-425" y="0">
+			<name x="-586" y="-25">RequestOTAUpdate</name>
+			<committed/>
+		</location>
+		<location id="id23" x="136" y="-102">
+		</location>
+		<location id="id24" x="680" y="-102">
+			<name x="629" y="-136">RequestSampling</name>
+		</location>
+		<init ref="id21"/>
+		<transition id="id25">
+			<source ref="id24"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="714" y="-102">sampleSensor[sampleTargetId]!</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id4"/>
+			<target ref="id23"/>
+			<label kind="assignment" x="-407" y="-331">sensorSamplingQueueIndex++</label>
+			<nail x="-144" y="-238"/>
+			<nail x="51" y="-144"/>
+		</transition>
+		<transition id="id27">
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="assignment" x="-93" y="-510">samplingQueueAdd(sensorSamplingQueueIndex)</label>
+		</transition>
+		<transition id="id28">
+			<source ref="id23"/>
+			<target ref="id4"/>
+			<label kind="guard" x="25" y="-314">sensorSamplingQueueIndex != nSensors &amp;&amp;
+samplingClock[sensorSamplingQueueIndex] &lt; sensors[sensorSamplingQueueIndex].samplingRate</label>
+		</transition>
+		<transition id="id29">
+			<source ref="id23"/>
+			<target ref="id5"/>
+			<label kind="guard" x="204" y="-365">sensorSamplingQueueIndex != nSensors &amp;&amp;
+samplingClock[sensorSamplingQueueIndex] &gt;= sensors[sensorSamplingQueueIndex].samplingRate</label>
+		</transition>
+		<transition id="id30">
+			<source ref="id23"/>
+			<target ref="id20"/>
+			<label kind="guard" x="85" y="-76">sensorSamplingQueueIndex == nSensors</label>
+		</transition>
+		<transition id="id31">
+			<source ref="id6"/>
+			<target ref="id13"/>
+		</transition>
+		<transition id="id32">
+			<source ref="id7"/>
+			<target ref="id13"/>
+		</transition>
+		<transition id="id33">
+			<source ref="id16"/>
+			<target ref="id6"/>
+			<label kind="guard" x="442" y="170">samplesLength &gt;= batchSizePolicy</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id16"/>
+			<target ref="id7"/>
+			<label kind="guard" x="110" y="170">batchClock &gt;= batchRatePolicy</label>
+		</transition>
+		<transition id="id35">
+			<source ref="id22"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="-518" y="-68">OTAUpdate!</label>
+		</transition>
+		<transition id="id36">
+			<source ref="id21"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-204" y="-170">satelliteBoot?</label>
+		</transition>
+		<transition id="id37">
+			<source ref="id15"/>
+			<target ref="id20"/>
+			<label kind="assignment" x="442" y="-229">samplesAdd(sampleTargetId)</label>
+			<nail x="408" y="-204"/>
+		</transition>
+		<transition id="id38">
+			<source ref="id20"/>
+			<target ref="id16"/>
+			<label kind="guard" x="161" y="-17">samplingQueueLength == 0</label>
+		</transition>
+		<transition id="id39">
+			<source ref="id20"/>
+			<target ref="id24"/>
+			<label kind="guard" x="442" y="-85">samplingQueueLength &gt; 0</label>
+			<label kind="assignment" x="442" y="-68">sampleTargetId := samplingQueueDequeue()</label>
+			<nail x="612" y="-102"/>
+		</transition>
+		<transition id="id40">
+			<source ref="id11"/>
+			<target ref="id23"/>
+			<label kind="assignment" x="-127" y="-93">sensorSamplingQueueIndex := 0</label>
+		</transition>
+		<transition id="id41">
+			<source ref="id19"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-357" y="-127">OTAUpdated?</label>
+		</transition>
+		<transition id="id42">
+			<source ref="id18"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-561" y="42">requireOTA==true</label>
+			<label kind="synchronisation" x="-518" y="59">OTAChecked?</label>
+			<nail x="-425" y="102"/>
+			<nail x="-425" y="17"/>
+		</transition>
+		<transition id="id43">
+			<source ref="id18"/>
+			<target ref="id8"/>
+			<label kind="guard" x="-314" y="8">requireOTA==false</label>
+			<label kind="synchronisation" x="-314" y="-8">OTAChecked?</label>
+			<label kind="assignment" x="-314" y="25">idleTime := getIdleTime(),
+sleepClock := 0</label>
+		</transition>
+		<transition id="id44">
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="-229" y="76">OTACheck!</label>
+		</transition>
+		<transition id="id45">
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-34" y="102">batchClock &lt; batchRatePolicy &amp;&amp; 
+samplesLength &lt; batchSizePolicy</label>
+		</transition>
+		<transition id="id46">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="884" y="-195">sampledSensor[sampleTargetId]?</label>
+		</transition>
+		<transition id="id47">
+			<source ref="id8"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-306" y="-59">sleepClock &gt;= idleTime</label>
+			<nail x="-102" y="-34"/>
+		</transition>
+		<transition id="id48">
+			<source ref="id9"/>
+			<target ref="id17"/>
+			<label kind="assignment" x="-51" y="280">clearSamples(),
+timeoutClock := 0</label>
+		</transition>
+		<transition id="id49">
+			<source ref="id12"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="144" y="442">dataSaved?</label>
+		</transition>
+		<transition id="id50">
+			<source ref="id10"/>
+			<target ref="id13"/>
+		</transition>
+		<transition id="id51">
+			<source ref="id12"/>
+			<target ref="id10"/>
+			<label kind="guard" x="484" y="442">timeoutClock &gt;= sendingTimeout</label>
+			<nail x="680" y="433"/>
+		</transition>
+		<transition id="id52">
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="314" y="331">saveData!</label>
+			<label kind="assignment" x="246" y="348">timeoutClock := 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>SatelliteRegistration</name>
+		<parameter>chan &amp;reqRegistration, chan &amp;registrationACK, chan &amp;OTAUpdate, chan &amp;OTAUpdated, chan &amp;satelliteBoot, chan &amp;registrationTimeout, chan &amp;reqCompile, chan &amp;sendCompiled</parameter>
+		<declaration>clock timeoutClock;
+
+const int regTimeout = 200;</declaration>
+		<location id="id53" x="-952" y="221">
+			<name x="-935" y="195">DSLCompilationACK</name>
+		</location>
+		<location id="id54" x="-952" y="144">
+			<name x="-935" y="119">DSLRequestCompilation</name>
+		</location>
+		<location id="id55" x="-952" y="476">
+			<name x="-926" y="467">RegistrationAndInitialisationComplete</name>
+		</location>
+		<location id="id56" x="-952" y="-102">
+			<name x="-962" y="-136">Unregistered</name>
+		</location>
+		<location id="id57" x="-161" y="-229">
+			<name x="-204" y="-263">ACKtimeout</name>
+		</location>
+		<location id="id58" x="-1190" y="-17">
+			<name x="-1182" y="-51">Idle</name>
+			<label kind="comments" x="-1377" y="-68">IoT device</label>
+		</location>
+		<location id="id59" x="-714" y="-102">
+			<name x="-765" y="-85">ReadRAMLData</name>
+		</location>
+		<location id="id60" x="-459" y="-102">
+			<name x="-544" y="-85">RequestRegistration</name>
+		</location>
+		<location id="id61" x="-161" y="-102">
+			<name x="-144" y="-136">PendingServerACK</name>
+		</location>
+		<location id="id62" x="-552" y="59">
+			<name x="-595" y="76">ServerACK</name>
+		</location>
+		<location id="id63" x="-952" y="59">
+			<name x="-962" y="25">Registered</name>
+		</location>
+		<location id="id64" x="-952" y="323">
+			<name x="-926" y="306">InitialOTAUpdateInProgress</name>
+		</location>
+		<location id="id65" x="-952" y="399">
+			<name x="-935" y="382">OTAcompleted</name>
+			<committed/>
+		</location>
+		<init ref="id58"/>
+		<transition id="id66">
+			<source ref="id54"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="-943" y="170">sendCompiled?</label>
+		</transition>
+		<transition id="id67">
+			<source ref="id63"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="-935" y="85">reqCompile!</label>
+		</transition>
+		<transition id="id68">
+			<source ref="id65"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-943" y="416">satelliteBoot!</label>
+		</transition>
+		<transition id="id69">
+			<source ref="id64"/>
+			<target ref="id65"/>
+			<label kind="synchronisation" x="-935" y="340">OTAUpdated?</label>
+		</transition>
+		<transition id="id70">
+			<source ref="id53"/>
+			<target ref="id64"/>
+			<label kind="synchronisation" x="-943" y="264">OTAUpdate!</label>
+		</transition>
+		<transition id="id71">
+			<source ref="id56"/>
+			<target ref="id59"/>
+		</transition>
+		<transition id="id72">
+			<source ref="id58"/>
+			<target ref="id56"/>
+			<label kind="guard" x="-1385" y="-110">SatelliteRegisteredWithServer == false</label>
+		</transition>
+		<transition id="id73">
+			<source ref="id58"/>
+			<target ref="id63"/>
+			<label kind="guard" x="-1368" y="34">SatelliteRegisteredWithServer == true</label>
+		</transition>
+		<transition id="id74">
+			<source ref="id57"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="-442" y="-246">registrationTimeout!</label>
+			<nail x="-459" y="-229"/>
+		</transition>
+		<transition id="id75">
+			<source ref="id62"/>
+			<target ref="id63"/>
+		</transition>
+		<transition id="id76">
+			<source ref="id61"/>
+			<target ref="id57"/>
+			<label kind="guard" x="-144" y="-187">timeoutClock &gt; regTimeout</label>
+		</transition>
+		<transition id="id77">
+			<source ref="id61"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="-425" y="68">registrationACK?</label>
+			<nail x="-161" y="59"/>
+		</transition>
+		<transition id="id78">
+			<source ref="id60"/>
+			<target ref="id61"/>
+			<label kind="synchronisation" x="-391" y="-144">reqRegistration!</label>
+			<label kind="assignment" x="-391" y="-127">timeoutClock := 0</label>
+		</transition>
+		<transition id="id79">
+			<source ref="id59"/>
+			<target ref="id60"/>
+		</transition>
+	</template>
+	<template>
+		<name>BackendServer</name>
+		<parameter>chan &amp;dataSaved, chan &amp;saveData, chan &amp;registrationACK, chan &amp;reqRegistration, bool &amp;satelliteRegisteredWithServer, chan &amp;registrationTimeout</parameter>
+		<location id="id80" x="-399" y="51">
+			<name x="-442" y="18">Idle</name>
+		</location>
+		<location id="id81" x="306" y="-68">
+			<name x="314" y="-102">InsertedSensorDataIntoDB</name>
+		</location>
+		<location id="id82" x="-246" y="-68">
+			<name x="-331" y="-102">SavingRequested</name>
+		</location>
+		<location id="id83" x="8" y="-68">
+			<name x="-26" y="-102">ParsingSensorData</name>
+		</location>
+		<location id="id84" x="357" y="153">
+			<name x="246" y="110">InsertedRegistrationDataIntoDB</name>
+		</location>
+		<location id="id85" x="-246" y="153">
+			<name x="-306" y="170">RegistrationRequested</name>
+		</location>
+		<location id="id86" x="0" y="153">
+			<name x="-85" y="119">ParsingRegistrationData</name>
+		</location>
+		<init ref="id80"/>
+		<transition id="id87">
+			<source ref="id83"/>
+			<target ref="id81"/>
+		</transition>
+		<transition id="id88">
+			<source ref="id81"/>
+			<target ref="id80"/>
+			<label kind="synchronisation" x="-68" y="-238">dataSaved!</label>
+			<nail x="306" y="-204"/>
+			<nail x="-399" y="-204"/>
+		</transition>
+		<transition id="id89">
+			<source ref="id82"/>
+			<target ref="id83"/>
+		</transition>
+		<transition id="id90">
+			<source ref="id80"/>
+			<target ref="id82"/>
+			<label kind="synchronisation" x="-238" y="-17">saveData?</label>
+			<nail x="-246" y="8"/>
+		</transition>
+		<transition id="id91">
+			<source ref="id86"/>
+			<target ref="id80"/>
+			<label kind="synchronisation" x="-204" y="229">registrationTimeout?</label>
+			<nail x="0" y="255"/>
+			<nail x="-323" y="255"/>
+		</transition>
+		<transition id="id92">
+			<source ref="id84"/>
+			<target ref="id80"/>
+			<label kind="synchronisation" x="0" y="297">registrationACK!</label>
+			<nail x="357" y="289"/>
+			<nail x="-401" y="289"/>
+		</transition>
+		<transition id="id93">
+			<source ref="id86"/>
+			<target ref="id84"/>
+			<label kind="assignment" x="17" y="161">satelliteRegisteredWithServer := true</label>
+		</transition>
+		<transition id="id94">
+			<source ref="id85"/>
+			<target ref="id86"/>
+		</transition>
+		<transition id="id95">
+			<source ref="id80"/>
+			<target ref="id85"/>
+			<label kind="synchronisation" x="-263" y="59">reqRegistration?</label>
+			<nail x="-246" y="85"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">XtextEditor</name>
+		<parameter>chan &amp;KeyPress, chan &amp;KeyPressEnd, chan &amp;ReqCompile, chan &amp;RecCompileError, chan &amp;RecCompiled</parameter>
+		<declaration>// Place local declarations here.
+clock validationWait, compilationWait, loadTime;
+int contentLength;
+int contentId;
+int loadingRetryCount;
+
+//0 empty, 1 awaiting compile, 2 compile error, 3 compiled
+int loadState;</declaration>
+		<location id="id96" x="-1606" y="-272">
+			<name x="-1598" y="-306">Compiled</name>
+		</location>
+		<location id="id97" x="-1088" y="-553">
+			<name x="-1147" y="-595">ValidationError</name>
+		</location>
+		<location id="id98" x="-1308" y="-654">
+			<name x="-1334" y="-705">Writing</name>
+		</location>
+		<location id="id99" x="-1308" y="-272">
+			<name x="-1290" y="-315">Compiling</name>
+		</location>
+		<location id="id100" x="-1487" y="-493">
+			<name x="-1523" y="-536">CompileError</name>
+		</location>
+		<location id="id101" x="-875" y="-425">
+			<name x="-850" y="-459">Validated</name>
+		</location>
+		<location id="id102" x="-1309" y="-765">
+			<name x="-1326" y="-799">Empty</name>
+		</location>
+		<location id="id103" x="-1972" y="-765">
+			<name x="-2031" y="-808">Unloaded</name>
+		</location>
+		<location id="id104" x="-1717" y="-765">
+			<name x="-1734" y="-799">Loaded</name>
+			<label kind="invariant" x="-1887" y="-859">(contentLength==0 &amp;&amp; loadState == 0) ||
+(contentLength&gt;0 &amp;&amp; loadState &gt;= 1 &amp;&amp; loadState &lt;=3)</label>
+		</location>
+		<location id="id105" x="-1980" y="-646">
+			<name x="-2031" y="-680">LoadingFailure</name>
+		</location>
+		<branchpoint id="id106" x="-875" y="-655"/>
+		<init ref="id103"/>
+		<transition id="id107">
+			<source ref="id106"/>
+			<target ref="id101"/>
+			<label kind="probability" x="-867" y="-587">10</label>
+		</transition>
+		<transition id="id108">
+			<source ref="id106"/>
+			<target ref="id97"/>
+			<label kind="probability" x="-952" y="-587">1</label>
+			<nail x="-943" y="-553"/>
+		</transition>
+		<transition id="id109" controllable="false">
+			<source ref="id98"/>
+			<target ref="id106"/>
+			<label kind="guard" x="-1079" y="-697">contentLength &gt; 0</label>
+			<label kind="synchronisation" x="-1079" y="-680">KeyPressEnd?</label>
+		</transition>
+		<transition id="id110">
+			<source ref="id103"/>
+			<target ref="id104"/>
+		</transition>
+		<transition id="id111">
+			<source ref="id105"/>
+			<target ref="id103"/>
+			<nail x="-2065" y="-646"/>
+		</transition>
+		<transition id="id112">
+			<source ref="id103"/>
+			<target ref="id105"/>
+			<label kind="guard" x="-1929" y="-723">loadTime &gt;=1000</label>
+			<nail x="-1887" y="-646"/>
+		</transition>
+		<transition id="id113">
+			<source ref="id104"/>
+			<target ref="id99"/>
+			<label kind="guard" x="-1291" y="-204">loadState == 1</label>
+			<nail x="-1717" y="-153"/>
+			<nail x="-1308" y="-153"/>
+		</transition>
+		<transition id="id114">
+			<source ref="id104"/>
+			<target ref="id100"/>
+			<label kind="guard" x="-1623" y="-204">loadState == 2</label>
+			<nail x="-1717" y="-153"/>
+			<nail x="-1487" y="-153"/>
+		</transition>
+		<transition id="id115">
+			<source ref="id104"/>
+			<target ref="id96"/>
+			<label kind="guard" x="-1853" y="-323">loadState == 3</label>
+			<nail x="-1717" y="-272"/>
+		</transition>
+		<transition id="id116">
+			<source ref="id104"/>
+			<target ref="id102"/>
+			<label kind="guard" x="-1615" y="-757">loadState==0</label>
+		</transition>
+		<transition id="id117">
+			<source ref="id98"/>
+			<target ref="id102"/>
+			<label kind="guard" x="-1249" y="-748">contentLength == 0</label>
+			<label kind="synchronisation" x="-1249" y="-765">KeyPressEnd?</label>
+			<label kind="assignment" x="-1249" y="-731">loadState:=0</label>
+			<nail x="-1249" y="-714"/>
+		</transition>
+		<transition id="id118">
+			<source ref="id102"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1453" y="-722">KeyPress?</label>
+			<nail x="-1368" y="-714"/>
+		</transition>
+		<transition id="id119">
+			<source ref="id101"/>
+			<target ref="id99"/>
+			<label kind="synchronisation" x="-1071" y="-298">ReqCompile!</label>
+			<label kind="assignment" x="-1071" y="-272">loadState:=1</label>
+			<nail x="-875" y="-272"/>
+		</transition>
+		<transition id="id120">
+			<source ref="id101"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1275" y="-459">KeyPress?</label>
+			<nail x="-1071" y="-425"/>
+			<nail x="-1308" y="-425"/>
+		</transition>
+		<transition id="id121">
+			<source ref="id99"/>
+			<target ref="id96"/>
+			<label kind="synchronisation" x="-1479" y="-297">RecCompiled?</label>
+			<label kind="assignment" x="-1479" y="-272">loadState:=3</label>
+		</transition>
+		<transition id="id122">
+			<source ref="id100"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1428" y="-519">KeyPress?</label>
+			<nail x="-1309" y="-493"/>
+		</transition>
+		<transition id="id123">
+			<source ref="id99"/>
+			<target ref="id100"/>
+			<label kind="synchronisation" x="-1470" y="-408">RecCompileError?</label>
+			<label kind="assignment" x="-1469" y="-382">loadState:=2</label>
+			<nail x="-1351" y="-382"/>
+			<nail x="-1487" y="-382"/>
+		</transition>
+		<transition id="id124">
+			<source ref="id99"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1291" y="-349">KeyPress?</label>
+		</transition>
+		<transition id="id125">
+			<source ref="id97"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1258" y="-578">KeyPress?</label>
+			<nail x="-1309" y="-553"/>
+		</transition>
+		<transition id="id126">
+			<source ref="id96"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-1529" y="-604">KeyPress?</label>
+			<nail x="-1606" y="-578"/>
+			<nail x="-1308" y="-578"/>
+		</transition>
+	</template>
+	<template>
+		<name>XtextCompiler</name>
+		<parameter>chan &amp;reqCompile, chan &amp;sendCompileError, chan &amp;sendCompiled</parameter>
+		<declaration>clock compileTime;
+
+void updateConfig() {
+    ServerHash++;
+    sensors[0].samplingRate = 50;
+}</declaration>
+		<location id="id127" x="-960" y="-425">
+			<name x="-1037" y="-467">AwaitingCompilation</name>
+		</location>
+		<location id="id128" x="-671" y="-425">
+			<name x="-698" y="-468">Compiling</name>
+		</location>
+		<location id="id129" x="-756" y="-348">
+			<name x="-807" y="-382">CompileError</name>
+		</location>
+		<location id="id130" x="-569" y="-425">
+			<name x="-579" y="-459">Saving</name>
+		</location>
+		<init ref="id127"/>
+		<transition id="id131">
+			<source ref="id130"/>
+			<target ref="id127"/>
+			<label kind="synchronisation" x="-816" y="-289">sendCompiled!</label>
+			<label kind="assignment" x="-816" y="-255">updateConfig()</label>
+			<nail x="-569" y="-264"/>
+			<nail x="-960" y="-264"/>
+		</transition>
+		<transition id="id132">
+			<source ref="id128"/>
+			<target ref="id130"/>
+		</transition>
+		<transition id="id133">
+			<source ref="id128"/>
+			<target ref="id129"/>
+			<nail x="-671" y="-348"/>
+		</transition>
+		<transition id="id134">
+			<source ref="id129"/>
+			<target ref="id127"/>
+			<label kind="synchronisation" x="-918" y="-340">sendCompileError!</label>
+			<nail x="-926" y="-348"/>
+		</transition>
+		<transition id="id135">
+			<source ref="id127"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="-850" y="-459">reqCompile?</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">SatelliteOTAUpdate</name>
+		<parameter>chan &amp;OTAUpdate, chan &amp;OTAUpdated, int &amp;serverHash, int &amp;deviceHash, int &amp;activePartition</parameter>
+		<declaration>// Place local declarations here.
+bool updateAvailable = false;
+clock rollbackTimer;
+
+// for simplicity and time rn max is 2 slots
+// This could be improved to check a array of partition slots and then select the next based on that
+void setActiveBootPartition() {
+    if (activePartition == 1) {
+        activePartition = 2;
+    } else {
+        activePartition = 1;
+    } 
+}
+
+
+void updateDeviceHash() {
+    deviceHash = serverHash;
+}
+</declaration>
+		<location id="id136" x="-1028" y="-688">
+			<name x="-1113" y="-722">Rollback</name>
+		</location>
+		<location id="id137" x="348" y="-748">
+			<name x="340" y="-782">CheckHash</name>
+		</location>
+		<location id="id138" x="-1028" y="-782">
+			<name x="-1038" y="-816">LogError</name>
+		</location>
+		<location id="id139" x="-756" y="-238">
+			<name x="-807" y="-221">ResumeProgram</name>
+		</location>
+		<location id="id140" x="824" y="-612">
+			<name x="790" y="-595">Restart</name>
+		</location>
+		<location id="id141" x="484" y="-612">
+			<name x="433" y="-646">ValidOTAImage</name>
+		</location>
+		<location id="id142" x="161" y="-782">
+			<name x="77" y="-816">IncompleteAppState</name>
+		</location>
+		<location id="id143" x="484" y="-484">
+			<name x="474" y="-518">InvalidOTAImage</name>
+		</location>
+		<location id="id144" x="187" y="-535">
+			<name x="144" y="-510">AllDataRecieved</name>
+		</location>
+		<location id="id145" x="59" y="-535">
+			<name x="0" y="-510">WritingInterrupt</name>
+		</location>
+		<location id="id146" x="-51" y="-586">
+			<name x="-61" y="-620">Writing</name>
+		</location>
+		<location id="id147" x="-535" y="-535">
+			<name x="-612" y="-510">GetImageDescription</name>
+		</location>
+		<location id="id148" x="-782" y="-782">
+			<name x="-824" y="-825">ERROR</name>
+		</location>
+		<location id="id149" x="-697" y="-535">
+			<name x="-756" y="-510">BeginOTAUpdate</name>
+		</location>
+		<location id="id150" x="-323" y="-535">
+			<name x="-357" y="-510">ValidateImageVersion</name>
+		</location>
+		<location id="id151" x="-68" y="-535">
+			<name x="-102" y="-518">PerformOTA</name>
+		</location>
+		<location id="id152" x="-960" y="-535">
+			<name x="-943" y="-569">OTAIdle</name>
+		</location>
+		<location id="id153" x="-848" y="-535">
+			<name x="-858" y="-569">DownloadImage</name>
+		</location>
+		<init ref="id152"/>
+		<transition id="id154">
+			<source ref="id138"/>
+			<target ref="id136"/>
+			<label kind="assignment" x="-1198" y="-756">rollbackTimer := 0</label>
+		</transition>
+		<transition id="id155">
+			<source ref="id153"/>
+			<target ref="id149"/>
+		</transition>
+		<transition id="id156">
+			<source ref="id139"/>
+			<target ref="id152"/>
+			<label kind="synchronisation" x="-867" y="-399">OTAUpdated!</label>
+			<nail x="-756" y="-374"/>
+			<nail x="-960" y="-374"/>
+		</transition>
+		<transition id="id157">
+			<source ref="id140"/>
+			<target ref="id152"/>
+			<label kind="synchronisation" x="-866" y="-1003">OTAUpdated!</label>
+			<nail x="824" y="-986"/>
+			<nail x="-960" y="-986"/>
+		</transition>
+		<transition id="id158">
+			<source ref="id152"/>
+			<target ref="id153"/>
+			<label kind="synchronisation" x="-875" y="-518">OTAUpdate?</label>
+		</transition>
+		<transition id="id159">
+			<source ref="id144"/>
+			<target ref="id141"/>
+			<label kind="guard" x="263" y="-629">serverHash == deviceHash</label>
+		</transition>
+		<transition id="id160">
+			<source ref="id144"/>
+			<target ref="id143"/>
+			<label kind="guard" x="221" y="-493">deviceHash != serverHash</label>
+		</transition>
+		<transition id="id161">
+			<source ref="id137"/>
+			<target ref="id144"/>
+			<label kind="assignment" x="161" y="-756">updateDeviceHash()</label>
+			<nail x="153" y="-697"/>
+		</transition>
+		<transition id="id162">
+			<source ref="id144"/>
+			<target ref="id137"/>
+		</transition>
+		<transition id="id163">
+			<source ref="id150"/>
+			<target ref="id139"/>
+			<label kind="guard" x="-535" y="-365">deviceHash == ServerHash</label>
+		</transition>
+		<transition id="id164">
+			<source ref="id145"/>
+			<target ref="id142"/>
+		</transition>
+		<transition id="id165">
+			<source ref="id136"/>
+			<target ref="id139"/>
+			<nail x="-1028" y="-238"/>
+		</transition>
+		<transition id="id166">
+			<source ref="id148"/>
+			<target ref="id138"/>
+		</transition>
+		<transition id="id167">
+			<source ref="id142"/>
+			<target ref="id148"/>
+		</transition>
+		<transition id="id168">
+			<source ref="id147"/>
+			<target ref="id148"/>
+			<nail x="-501" y="-629"/>
+		</transition>
+		<transition id="id169">
+			<source ref="id150"/>
+			<target ref="id148"/>
+		</transition>
+		<transition id="id170">
+			<source ref="id143"/>
+			<target ref="id148"/>
+			<nail x="935" y="-484"/>
+			<nail x="928" y="-884"/>
+			<nail x="-714" y="-884"/>
+		</transition>
+		<transition id="id171">
+			<source ref="id141"/>
+			<target ref="id140"/>
+			<label kind="assignment" x="552" y="-663">setActiveBootPartition()</label>
+		</transition>
+		<transition id="id172">
+			<source ref="id145"/>
+			<target ref="id144"/>
+		</transition>
+		<transition id="id173">
+			<source ref="id151"/>
+			<target ref="id145"/>
+		</transition>
+		<transition id="id174">
+			<source ref="id146"/>
+			<target ref="id151"/>
+			<nail x="-102" y="-586"/>
+		</transition>
+		<transition id="id175">
+			<source ref="id151"/>
+			<target ref="id146"/>
+		</transition>
+		<transition id="id176">
+			<source ref="id150"/>
+			<target ref="id151"/>
+			<label kind="guard" x="-314" y="-578">deviceHash != serverHash</label>
+		</transition>
+		<transition id="id177">
+			<source ref="id147"/>
+			<target ref="id150"/>
+		</transition>
+		<transition id="id178">
+			<source ref="id149"/>
+			<target ref="id148"/>
+			<nail x="-782" y="-603"/>
+		</transition>
+		<transition id="id179">
+			<source ref="id149"/>
+			<target ref="id147"/>
+		</transition>
+	</template>
+	<template>
+		<name>SatelliteOTACheck</name>
+		<parameter>chan &amp;OTACheck,chan &amp;OTAChecked, bool &amp;requireOTA, int &amp;serverHash, int &amp;deviceHash</parameter>
+		<location id="id180" x="-323" y="-59">
+			<name x="-434" y="-101">GetImageDescription</name>
+		</location>
+		<location id="id181" x="-323" y="18">
+			<name x="-450" y="8">CheckVersion</name>
+		</location>
+		<location id="id182" x="-178" y="-59">
+			<name x="-161" y="-93">OTAIdle</name>
+		</location>
+		<location id="id183" x="-178" y="17">
+			<name x="-153" y="0">SendResult</name>
+		</location>
+		<init ref="id182"/>
+		<transition id="id184">
+			<source ref="id183"/>
+			<target ref="id182"/>
+			<label kind="synchronisation" x="-170" y="-25">OTAChecked!</label>
+		</transition>
+		<transition id="id185">
+			<source ref="id182"/>
+			<target ref="id180"/>
+			<label kind="synchronisation" x="-263" y="-93">OTACheck?</label>
+		</transition>
+		<transition id="id186">
+			<source ref="id180"/>
+			<target ref="id181"/>
+		</transition>
+		<transition id="id187">
+			<source ref="id181"/>
+			<target ref="id183"/>
+			<label kind="assignment" x="-416" y="42">requireOTA := (deviceHash == ServerHash)</label>
+		</transition>
+	</template>
+	<system>chan reqRegistration, registrationACK, OTAUpdate, OTAUpdated, satelliteBoot, OTAChecked, OTACheck, sensorDataSent, serverACKReceived, registrationTimeout;
+bool requireOTA = true;
+chan dataSaved, saveData;
+satelliteMainRoutine = SatelliteMainRoutine(OTAUpdated, OTAUpdate, OTAChecked, OTACheck, satelliteBoot, sensorDataSent, serverACKReceived, requireOTA, saveData, dataSaved);
+
+
+satelliteSensor0 = SatelliteSensor(sampleSensor[0], sampledSensor[0], samplingClock[0]);
+satelliteSensor1 = SatelliteSensor(sampleSensor[1], sampledSensor[1], samplingClock[1]);
+satelliteSensor2 = SatelliteSensor(sampleSensor[2], sampledSensor[2], samplingClock[2]);
+
+
+bool satelliteRegisteredWithServer = false;
+
+
+chan reqCompile, sendCompileError, sendCompiled;
+xtextCompiler = XtextCompiler(reqCompile, sendCompileError, sendCompiled);
+
+
+backendServer = BackendServer(dataSaved, saveData, registrationACK, reqRegistration, satelliteRegisteredWithServer, registrationTimeout);
+
+
+satelliteOTAUpdate = SatelliteOTAUpdate(OTAUpdate, OTAUpdated, ServerHash, SatelliteHash, ActivePartition);
+satelliteOTACheck = SatelliteOTACheck(OTACheck, OTAChecked, requireOTA, ServerHash, SatelliteHash);
+
+satelliteRegistration  =  SatelliteRegistration(reqRegistration, registrationACK, OTAUpdate, OTAUpdated, satelliteBoot, registrationTimeout, reqCompile, sendCompiled);
+
+
+system satelliteSensor0, satelliteSensor1, satelliteSensor2, satelliteMainRoutine, satelliteRegistration, xtextCompiler, satelliteOTAUpdate, satelliteOTACheck, backendServer;</system>
+	<queries>
+		<query>
+			<formula>=====  Functional requirements  ===== </formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>E&lt;&gt; sensors[0].samplingRate != initialSamplingRate</formula>
+			<comment>F1 and F2</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-06 10:15:34 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; xtextCompiler.Saving</formula>
+			<comment>F4</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-06 10:15:34 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E[] (satelliteMainRoutine.Sampling imply satelliteMainRoutine.Sleeping)</formula>
+			<comment>F5</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-06 10:15:34 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] ((satelliteMainRoutine.batchClock &gt;= batchRatePolicy || satelliteMainRoutine.samplesLength &gt;= batchSizePolicy) imply satelliteMainRoutine.Sending) || ((satelliteMainRoutine.batchClock &lt; batchRatePolicy &amp;&amp; satelliteMainRoutine.samplesLength &lt; batchSizePolicy) imply satelliteMainRoutine.SendingHearbeatAndLogs)</formula>
+			<comment>F6</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-06 10:16:13 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not (satelliteMainRoutine.RequestOTAUpdate &amp;&amp; requireOTA != true)</formula>
+			<comment>F7
+</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-06 10:16:48 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; satelliteMainRoutine.Received</formula>
+			<comment>F8</comment>
+		</query>
+		<query>
+			<formula>E[] satelliteRegistration.Unregistered imply satelliteRegistration.Registered</formula>
+			<comment>F9</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:09:11 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E[] (satelliteOTAUpdate.ERROR imply satelliteOTAUpdate.ResumeProgram)
+</formula>
+			<comment>F11</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:09:14 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; satelliteMainRoutine.ACKTimeOut imply satelliteMainRoutine.samplesLength &gt; 0</formula>
+			<comment>F12</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:09:15 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; SatelliteHash != ServerHash imply satelliteOTAUpdate.PerformOTA</formula>
+			<comment>F14</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:09:17 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>A[] not deadlock
+</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-06-06 10:17:27 +0200">
+			</result>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>=====  Non-functional requirements  ===== </formula>
+			<comment/>
+		</query>
+		<query>
+			<formula>satelliteRegistration.RequestRegistration --&gt; (satelliteRegistration.ServerACK imply satelliteRegistration.timeoutClock &lt; 200)</formula>
+			<comment>NF3</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:03:36 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>satelliteMainRoutine.Sending --&gt; (satelliteMainRoutine.Received imply satelliteMainRoutine.timeoutClock &lt;= 200)</formula>
+			<comment>NF4</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-04 22:04:29 +0200">
+			</result>
+		</query>
+		<query>
+			<formula>satelliteOTAUpdate.ERROR --&gt; (satelliteOTAUpdate.ResumeProgram imply satelliteOTAUpdate.rollbackTimer &lt; 120000)</formula>
+			<comment>NF6</comment>
+		</query>
+	</queries>
+</nta>
